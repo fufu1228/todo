@@ -28,6 +28,16 @@
                 />
               </svg>
             </div>
+            <!-- 演示 -->
+            <router-link
+              to="/demo"
+              class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              title="演示"
+            >
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7V5z" />
+              </svg>
+            </router-link>
             <router-link
               to="/settings"
               class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
