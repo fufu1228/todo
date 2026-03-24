@@ -115,10 +115,26 @@ todo/
 npm install
 ```
 
+如果你在当前设备使用 `npm install` 失败，可优先使用 Yarn：
+
+```bash
+yarn install
+```
+
+建议固定项目级镜像源（已在仓库内配置）：
+- npm：`.npmrc` -> `https://registry.npmmirror.com/`
+- yarn：`.yarnrc.yml` -> `npmRegistryServer: "https://registry.npmmirror.com"`
+
 ### 开发运行
 
 ```bash
 npm run dev
+```
+
+或使用 Yarn：
+
+```bash
+yarn dev
 ```
 
 应用将在 `http://localhost:3000` 启动
@@ -129,12 +145,24 @@ npm run dev
 npm run build
 ```
 
+或使用 Yarn：
+
+```bash
+yarn build
+```
+
 构建产物将输出到 `dist` 目录
 
 ### 预览生产版本
 
 ```bash
 npm run preview
+```
+
+或使用 Yarn：
+
+```bash
+yarn preview
 ```
 
 ## 📖 使用指南

@@ -117,7 +117,7 @@ import type { Task } from '@/types/task'
 import { formatDate, isOverdue as checkOverdue, isDueSoon } from '@/utils/date'
 import { getCategoryColor } from '@/utils/category'
 import { useGesture } from '@/composables/useGesture'
-import { taskStore, toggleTaskStatus, deleteTask, updateTask } from '@/stores/taskStore'
+import { toggleTaskStatus, deleteTask } from '@/stores/taskStore'
 
 interface Props {
   task: Task

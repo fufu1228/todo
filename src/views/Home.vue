@@ -212,19 +212,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import TaskItem from '@/components/TaskItem.vue'
 import TaskForm from '@/components/TaskForm.vue'
-import { taskStore, filteredAndSortedTasks, updateSort, deleteTasks } from '@/stores/taskStore'
-import { useKeyboardShortcut } from '@vueuse/core'
-import type { Task } from '@/types/task'
+import { taskStore, filteredAndSortedTasks, updateSort } from '@/stores/taskStore'
+import { useKeyboardShortcut } from '@/composables/useKeyboardShortcut'
+import type { Task, TaskStatus, TaskPriority } from '@/types/task'
 
 const showTaskForm = ref(false)
 const editingTask = ref<Task | undefined>()
 const searchQuery = ref('')
-const statusFilter = ref('')
+const statusFilter = ref<TaskStatus | ''>('')
 const categoryFilter = ref('')
-const priorityFilter = ref('')
+const priorityFilter = ref<TaskPriority | ''>('')
 const sortField = ref<'dueDate' | 'priority' | 'createdAt' | 'title'>('createdAt')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 const showShortcuts = ref(false)
@@ -233,8 +233,6 @@ const categories = computed(() => taskStore.settings.categories)
 
 // 应用筛选和排序
 const filteredTasks = computed(() => {
-  let tasks = [...filteredAndSortedTasks.value]
-
   // 应用筛选器
   taskStore.filter = {
     status: statusFilter.value || undefined,
@@ -249,7 +247,7 @@ const filteredTasks = computed(() => {
     order: sortOrder.value,
   })
 
-  return tasks
+  return filteredAndSortedTasks.value
 })
 
 function toggleSortOrder() {

@@ -1,7 +1,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import { taskStore, updateTask } from '@/stores/taskStore'
 import { shouldRemind, isRepeatReminderTime, triggerReminder } from '@/utils/reminder'
-import type { Task } from '@/types/task'
 
 /**
  * 提醒管理组合函数

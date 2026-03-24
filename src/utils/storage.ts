@@ -1,4 +1,4 @@
-import type { AppData, AppSettings, Task } from '@/types/task'
+import type { AppData, AppSettings } from '@/types/task'
 
 const STORAGE_KEY = 'todo_app_data'
 const DATA_VERSION = '1.0.0'

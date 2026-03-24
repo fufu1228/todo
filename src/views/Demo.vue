@@ -477,13 +477,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useKeyboardShortcut } from '@vueuse/core'
+import { useKeyboardShortcut } from '@/composables/useKeyboardShortcut'
 
 import TaskItem from '@/components/TaskItem.vue'
 import TaskForm from '@/components/TaskForm.vue'
 
 import { taskStore, filteredAndSortedTasks, updateSort, createTask, updateTask, deleteTasks } from '@/stores/taskStore'
-import type { Task } from '@/types/task'
+import type { Task, TaskPriority, TaskStatus } from '@/types/task'
 
 import { dayjs } from '@/utils/date'
 import { downloadData, readDataFromFile, saveAppData } from '@/utils/storage'
@@ -511,9 +511,9 @@ const showTaskForm = ref(false)
 const editingTask = ref<Task | undefined>()
 
 const searchQuery = ref('')
-const statusFilter = ref('')
+const statusFilter = ref<TaskStatus | ''>('')
 const categoryFilter = ref('')
-const priorityFilter = ref('')
+const priorityFilter = ref<TaskPriority | ''>('')
 const sortField = ref<'createdAt' | 'dueDate' | 'priority' | 'title'>('createdAt')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 const showShortcuts = ref(false)

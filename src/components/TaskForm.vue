@@ -162,11 +162,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type { Task, TaskPriority, ReminderConfig } from '@/types/task'
 import { getDateTimeInputValue } from '@/utils/date'
 import { taskStore, createTask, updateTask } from '@/stores/taskStore'
-import { useKeyboardShortcut } from '@vueuse/core'
+import { useKeyboardShortcut } from '@/composables/useKeyboardShortcut'
 
 interface Props {
   task?: Task

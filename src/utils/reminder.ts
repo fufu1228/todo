@@ -1,5 +1,5 @@
 import { dayjs } from '@/utils/date'
-import type { Task, ReminderConfig } from '@/types/task'
+import type { Task } from '@/types/task'
 
 /**
  * 检查任务是否需要提醒

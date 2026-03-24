@@ -1,5 +1,3 @@
-import type { AppSettings } from '@/types/task'
-
 /**
  * 基于关键词自动分类任务
  */
