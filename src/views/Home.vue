@@ -166,6 +166,8 @@
           :key="task.id"
           :task="task"
           @edit="handleEdit"
+          @add-subtask="handleAddSubtask"
+          @edit-subtask="handleEdit"
         />
       </div>
 
@@ -195,7 +197,12 @@
     </main>
 
     <!-- 任务表单弹窗 -->
-    <TaskForm v-if="showTaskForm" :task="editingTask" @close="handleFormClose" />
+    <TaskForm
+      v-if="showTaskForm"
+      :task="editingTask"
+      :parent-id="parentTaskId"
+      @close="handleFormClose"
+    />
 
     <!-- 快捷键提示（仅PC端） -->
     <div
@@ -221,6 +228,7 @@ import type { Task, TaskStatus, TaskPriority } from '@/types/task'
 
 const showTaskForm = ref(false)
 const editingTask = ref<Task | undefined>()
+const parentTaskId = ref<string | undefined>()
 const searchQuery = ref('')
 const statusFilter = ref<TaskStatus | ''>('')
 const categoryFilter = ref('')
@@ -256,12 +264,20 @@ function toggleSortOrder() {
 
 function handleEdit(task: Task) {
   editingTask.value = task
+  parentTaskId.value = undefined
+  showTaskForm.value = true
+}
+
+function handleAddSubtask(task: Task) {
+  editingTask.value = undefined
+  parentTaskId.value = task.id
   showTaskForm.value = true
 }
 
 function handleFormClose() {
   showTaskForm.value = false
   editingTask.value = undefined
+  parentTaskId.value = undefined
 }
 
 
@@ -269,6 +285,7 @@ function handleFormClose() {
 useKeyboardShortcut(['Meta+n', 'Ctrl+n'], () => {
   if (!showTaskForm.value) {
     showTaskForm.value = true
+    parentTaskId.value = undefined
   }
 })
 

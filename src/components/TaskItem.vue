@@ -67,7 +67,7 @@
           <div
             v-for="subtask in task.subtasks"
             :key="subtask.id"
-            class="flex items-center gap-2 text-sm"
+            class="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100"
           >
             <input
               type="checkbox"
@@ -79,15 +79,43 @@
               :class="{
                 'line-through text-gray-400': subtask.status === 'completed',
               }"
+              class="flex-1"
             >
               {{ subtask.title }}
             </span>
+            <button
+              @click="handleSubtaskEdit(subtask)"
+              class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              title="编辑子任务"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              @click="handleSubtaskDelete(subtask.id)"
+              class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+              title="删除子任务"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- 操作按钮 -->
       <div class="flex items-center gap-2">
+        <button
+          @click="$emit('add-subtask', task)"
+          class="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+          title="添加子任务"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
         <button
           @click="$emit('edit', task)"
           class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -117,7 +145,7 @@ import type { Task } from '@/types/task'
 import { formatDate, isOverdue as checkOverdue, isDueSoon } from '@/utils/date'
 import { getCategoryColor } from '@/utils/category'
 import { useGesture } from '@/composables/useGesture'
-import { toggleTaskStatus, deleteTask } from '@/stores/taskStore'
+import { taskStore, toggleTaskStatus, deleteTask } from '@/stores/taskStore'
 
 interface Props {
   task: Task
@@ -126,6 +154,8 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   edit: [task: Task]
+  'add-subtask': [task: Task]
+  'edit-subtask': [subtask: Task]
 }>()
 
 const isOverdue = computed(() => checkOverdue(props.task.dueDate || ''))
@@ -150,7 +180,7 @@ const priorityText = computed(() => {
 })
 
 const categoryColor = computed(() => {
-  return `px-2 py-1 rounded text-xs ${getCategoryColor(props.task.category || '其他')}`
+  return `px-2 py-1 rounded text-xs ${getCategoryColor(props.task.category || '其他', taskStore.settings.categoryColors)}`
 })
 
 const dueDateClass = computed(() => {
@@ -186,6 +216,23 @@ function toggleSubtaskStatus(subtaskId: string) {
   const subtask = props.task.subtasks?.find((st) => st.id === subtaskId)
   if (subtask) {
     toggleTaskStatus(subtaskId)
+    // 检查所有子任务是否都已完成
+    const allSubtasksCompleted = props.task.subtasks?.every((st) => st.status === 'completed')
+    if (allSubtasksCompleted && props.task.status !== 'completed') {
+      toggleTaskStatus(props.task.id)
+    } else if (!allSubtasksCompleted && props.task.status === 'completed') {
+      toggleTaskStatus(props.task.id)
+    }
+  }
+}
+
+function handleSubtaskEdit(subtask: Task) {
+  emit('edit-subtask', subtask)
+}
+
+function handleSubtaskDelete(subtaskId: string) {
+  if (confirm('确定要删除这个子任务吗？')) {
+    deleteTask(subtaskId)
   }
 }
 

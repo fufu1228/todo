@@ -5,6 +5,9 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           {{ isEdit ? '编辑任务' : '新建任务' }}
         </h2>
+        <p v-if="parentId && !isEdit" class="mb-4 text-sm text-primary-600 dark:text-primary-400">
+          正在创建子任务
+        </p>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <!-- 标题 -->

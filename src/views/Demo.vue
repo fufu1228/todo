@@ -202,6 +202,8 @@
                   :key="task.id"
                   :task="task"
                   @edit="handleEdit"
+                  @add-subtask="handleAddSubtask"
+                  @edit-subtask="handleEdit"
                 />
               </div>
 
@@ -303,11 +305,13 @@
               <div class="mt-4">
                 <div v-if="filteredTasks.length > 0" class="space-y-3">
                   <TaskItem
-                    v-for="task in filteredTasks"
-                    :key="task.id"
-                    :task="task"
-                    @edit="handleEdit"
-                  />
+                  v-for="task in filteredTasks"
+                  :key="task.id"
+                  :task="task"
+                  @edit="handleEdit"
+                  @add-subtask="handleAddSubtask"
+                  @edit-subtask="handleEdit"
+                />
                 </div>
                 <div
                   v-else
@@ -459,7 +463,12 @@
       </section>
     </main>
 
-    <TaskForm v-if="showTaskForm" :task="editingTask" @close="handleFormClose" />
+    <TaskForm
+      v-if="showTaskForm"
+      :task="editingTask"
+      :parent-id="parentTaskId"
+      @close="handleFormClose"
+    />
 
     <!-- 快捷键提示（仅PC） -->
     <div
@@ -509,6 +518,7 @@ onMounted(() => {
 
 const showTaskForm = ref(false)
 const editingTask = ref<Task | undefined>()
+const parentTaskId = ref<string | undefined>()
 
 const searchQuery = ref('')
 const statusFilter = ref<TaskStatus | ''>('')
@@ -551,12 +561,20 @@ function toggleSortOrder() {
 
 function handleEdit(task: Task) {
   editingTask.value = task
+  parentTaskId.value = undefined
+  showTaskForm.value = true
+}
+
+function handleAddSubtask(task: Task) {
+  editingTask.value = undefined
+  parentTaskId.value = task.id
   showTaskForm.value = true
 }
 
 function handleFormClose() {
   showTaskForm.value = false
   editingTask.value = undefined
+  parentTaskId.value = undefined
 }
 
 // 快捷键：Ctrl/Cmd + N 新建任务
@@ -564,6 +582,7 @@ useKeyboardShortcut(['Meta+n', 'Ctrl+n'], () => {
   if (!showTaskForm.value) {
     showTaskForm.value = true
     editingTask.value = undefined
+    parentTaskId.value = undefined
   }
 })
 
@@ -781,4 +800,3 @@ async function handleImport(event: Event) {
   }
 }
 </script>
-
