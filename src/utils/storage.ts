@@ -12,6 +12,14 @@ const defaultSettings: AppSettings = {
     order: 'desc',
   },
   categories: ['工作', '学习', '生活', '购物', '健康', '其他'],
+  categoryColors: {
+    工作: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    学习: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    生活: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    购物: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    健康: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    其他: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+  },
   categoryRules: {
     工作: ['会议', '项目', '报告', '邮件', '客户', '任务', 'deadline'],
     学习: ['课程', '作业', '考试', '阅读', '笔记', '复习', '学习'],

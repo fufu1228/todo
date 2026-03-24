@@ -1,5 +1,5 @@
 import { onMounted, onUnmounted } from 'vue'
-import { taskStore, updateTask } from '@/stores/taskStore'
+import { taskStore, updateTask, resetRecurringTasksIfNeeded } from '@/stores/taskStore'
 import { shouldRemind, isRepeatReminderTime, triggerReminder } from '@/utils/reminder'
 
 /**
@@ -12,6 +12,9 @@ export function useReminder() {
    * 检查所有任务的提醒
    */
   function checkAllReminders() {
+    // 每次检查提醒前，先处理重复任务自动重置
+    resetRecurringTasksIfNeeded()
+
     // 检查主任务
     taskStore.tasks.forEach((task) => {
       if (shouldRemind(task) || isRepeatReminderTime(task)) {

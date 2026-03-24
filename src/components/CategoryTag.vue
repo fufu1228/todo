@@ -7,6 +7,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { getCategoryColor } from '@/utils/category'
+import { taskStore } from '@/stores/taskStore'
 
 interface Props {
   category: string
@@ -14,5 +15,5 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const categoryColor = computed(() => getCategoryColor(props.category))
+const categoryColor = computed(() => getCategoryColor(props.category, taskStore.settings.categoryColors))
 </script>

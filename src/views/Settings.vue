@@ -104,17 +104,63 @@
           <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">分类管理</h2>
           <div class="space-y-4">
             <div class="flex flex-wrap gap-2">
-              <span
+              <div
                 v-for="category in categories"
                 :key="category"
-                :class="getCategoryColor(category)"
-                class="px-3 py-1 rounded-full text-sm font-medium"
+                class="inline-flex items-center gap-1"
               >
-                {{ category }}
-              </span>
+                <span
+                  :class="getCategoryColor(category, categoryColors)"
+                  class="px-3 py-1 rounded-full text-sm font-medium"
+                >
+                  {{ category }}
+                </span>
+                <button
+                  @click="removeCategory(category)"
+                  class="p-1 text-gray-400 hover:text-red-500"
+                  title="删除分类"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  新分类名称
+                </label>
+                <input
+                  v-model.trim="newCategory"
+                  type="text"
+                  placeholder="例如：旅行"
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  颜色
+                </label>
+                <select
+                  v-model="newCategoryColor"
+                  class="w-full sm:w-40 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                >
+                  <option v-for="option in colorOptions" :key="option.name" :value="option.value">
+                    {{ option.name }}
+                  </option>
+                </select>
+              </div>
+              <button
+                @click="addCategory"
+                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                添加分类
+              </button>
             </div>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              分类会根据任务标题和描述中的关键词自动匹配
+              可新增自定义分类并设置颜色；分类仍可通过关键词自动匹配。
             </p>
           </div>
         </section>
@@ -176,6 +222,19 @@ const themeText = computed(() => {
 const defaultPriority = ref(taskStore.settings.defaultPriority)
 const defaultReminderMinutes = ref(taskStore.settings.defaultReminderMinutes)
 const categories = computed(() => taskStore.settings.categories)
+const categoryColors = computed(() => taskStore.settings.categoryColors || {})
+const newCategory = ref('')
+const colorOptions = [
+  { name: '蓝色', value: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+  { name: '绿色', value: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+  { name: '黄色', value: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+  { name: '紫色', value: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
+  { name: '红色', value: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+  { name: '粉色', value: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200' },
+  { name: '青色', value: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200' },
+  { name: '靛蓝', value: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' },
+]
+const newCategoryColor = ref(colorOptions[0].value)
 
 function updateDefaultPriority() {
   updateSettings({ defaultPriority: defaultPriority.value })
@@ -183,6 +242,44 @@ function updateDefaultPriority() {
 
 function updateDefaultReminderMinutes() {
   updateSettings({ defaultReminderMinutes: defaultReminderMinutes.value })
+}
+
+function addCategory() {
+  const name = newCategory.value.trim()
+  if (!name) return
+  if (taskStore.settings.categories.includes(name)) {
+    alert('分类已存在')
+    return
+  }
+
+  const categories = [...taskStore.settings.categories, name]
+  const categoryColors = {
+    ...taskStore.settings.categoryColors,
+    [name]: newCategoryColor.value,
+  }
+  const categoryRules = {
+    ...taskStore.settings.categoryRules,
+    [name]: [],
+  }
+
+  updateSettings({ categories, categoryColors, categoryRules })
+  newCategory.value = ''
+}
+
+function removeCategory(category: string) {
+  if (!confirm(`确定要删除分类「${category}」吗？`)) return
+  const categories = taskStore.settings.categories.filter((item) => item !== category)
+  if (categories.length === 0) {
+    alert('至少需要保留一个分类')
+    return
+  }
+
+  const categoryColors = { ...taskStore.settings.categoryColors }
+  delete categoryColors[category]
+  const categoryRules = { ...taskStore.settings.categoryRules }
+  delete categoryRules[category]
+
+  updateSettings({ categories, categoryColors, categoryRules })
 }
 
 function handleExport() {

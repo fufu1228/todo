@@ -8,6 +8,7 @@ export interface ReminderConfig {
   repeatType?: RepeatType // 重复类型
   reminderTime?: string // 提醒时段 HH:mm
   lastReminded?: string // 上次提醒时间
+  lastCycleAt?: string // 上次周期重置时间
 }
 
 export interface Task {
@@ -43,6 +44,7 @@ export interface AppSettings {
   defaultReminderMinutes: number
   sortBy: TaskSort
   categories: string[]
+  categoryColors: Record<string, string>
   categoryRules: Record<string, string[]> // 分类关键词规则
 }
 

@@ -2,6 +2,7 @@ import { reactive, computed } from 'vue'
 import type { Task, TaskFilter, TaskSort, AppSettings } from '@/types/task'
 import { loadAppData, saveAppData } from '@/utils/storage'
 import { autoCategorize } from '@/utils/category'
+import { dayjs } from '@/utils/date'
 
 interface TaskStore {
   tasks: Task[]
@@ -133,6 +134,65 @@ export function toggleTaskStatus(id: string): void {
   if (task) {
     task.status = task.status === 'pending' ? 'completed' : 'pending'
     task.updatedAt = new Date().toISOString()
+    persistData()
+  }
+}
+
+function shouldResetRecurringTask(task: Task, now = dayjs()): boolean {
+  const reminder = task.reminder
+  if (!reminder?.enabled || reminder.repeatType === 'none') return false
+  if (task.status !== 'completed') return false
+
+  const lastCycle = dayjs(reminder.lastCycleAt || task.updatedAt || task.createdAt)
+
+  // 若配置了提醒时间，则到达该时刻后才重置，避免在凌晨提前重置
+  const hasReminderTime = !!reminder.reminderTime
+  let isTimeReady = true
+  if (hasReminderTime && reminder.reminderTime) {
+    const [hour, minute] = reminder.reminderTime.split(':').map(Number)
+    const threshold = dayjs().hour(hour).minute(minute).second(0).millisecond(0)
+    isTimeReady = now.isAfter(threshold) || now.isSame(threshold)
+  }
+
+  if (!isTimeReady) return false
+
+  switch (reminder.repeatType) {
+    case 'daily':
+      return lastCycle.startOf('day').isBefore(now.startOf('day'))
+    case 'weekly':
+      return lastCycle.startOf('week').isBefore(now.startOf('week'))
+    case 'monthly':
+      return lastCycle.startOf('month').isBefore(now.startOf('month'))
+    default:
+      return false
+  }
+}
+
+function resetRecurringInList(tasks: Task[], now: ReturnType<typeof dayjs>): boolean {
+  let changed = false
+
+  tasks.forEach((task) => {
+    if (shouldResetRecurringTask(task, now)) {
+      task.status = 'pending'
+      task.updatedAt = now.toISOString()
+      if (task.reminder) {
+        task.reminder.lastCycleAt = now.toISOString()
+      }
+      changed = true
+    }
+
+    if (task.subtasks?.length) {
+      changed = resetRecurringInList(task.subtasks, now) || changed
+    }
+  })
+
+  return changed
+}
+
+export function resetRecurringTasksIfNeeded(): void {
+  const now = dayjs()
+  const changed = resetRecurringInList(taskStore.tasks, now)
+  if (changed) {
     persistData()
   }
 }
