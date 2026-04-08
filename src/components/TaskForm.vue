@@ -1,12 +1,20 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="handleCancel">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+  <div
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    @click.self="handleCancel"
+  >
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+    >
       <div class="p-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           {{ isEdit ? '编辑任务' : '新建任务' }}
         </h2>
         <p v-if="parentId && !isEdit" class="mb-4 text-sm text-primary-600 dark:text-primary-400">
           正在创建子任务
+        </p>
+        <p v-if="isClassifying" class="mb-4 text-sm text-blue-600 dark:text-blue-400">
+          AI 正在自动分类...
         </p>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -37,14 +45,14 @@
             />
           </div>
 
-          <!-- 截止时间 -->
+          <!-- 截止日期 -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              截止时间
+              截止日期
             </label>
             <input
               v-model="formData.dueDate"
-              type="datetime-local"
+              type="date"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
@@ -79,6 +87,7 @@
             </label>
             <select
               v-model="formData.category"
+              @change="onCategoryChange"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">自动分类</option>
@@ -91,9 +100,7 @@
           <!-- 提醒设置 -->
           <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
             <div class="flex items-center justify-between mb-4">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                启用提醒
-              </label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300"> 启用提醒 </label>
               <input
                 v-model="formData.reminder.enabled"
                 type="checkbox"
@@ -145,6 +152,14 @@
           <!-- 按钮 -->
           <div class="flex gap-3 pt-4">
             <button
+              v-if="isEdit"
+              type="button"
+              @click="handleDelete"
+              class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              删除
+            </button>
+            <button
               type="button"
               @click="handleCancel"
               class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -153,9 +168,10 @@
             </button>
             <button
               type="submit"
-              class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              :disabled="isSubmitting"
+              class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
             >
-              {{ isEdit ? '保存' : '创建' }}
+              {{ isSubmitting ? '提交中...' : isEdit ? '保存' : '创建' }}
             </button>
           </div>
         </form>
@@ -165,15 +181,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { Task, TaskPriority, ReminderConfig } from '@/types/task'
-import { getDateTimeInputValue } from '@/utils/date'
-import { taskStore, createTask, updateTask } from '@/stores/taskStore'
+import {
+  taskStore,
+  createTask,
+  updateTask,
+  deleteTask,
+  saveCategoryPreference,
+} from '@/stores/taskStore'
 import { useKeyboardShortcut } from '@/composables/useKeyboardShortcut'
 
 interface Props {
   task?: Task
   parentId?: string
+  initialDueDate?: string
 }
 
 const props = defineProps<Props>()
@@ -182,6 +204,8 @@ const emit = defineEmits<{
 }>()
 
 const isEdit = computed(() => !!props.task)
+const isClassifying = ref(false)
+const isSubmitting = ref(false)
 
 const formData = ref<{
   title: string
@@ -193,7 +217,7 @@ const formData = ref<{
 }>({
   title: props.task?.title || '',
   description: props.task?.description || '',
-  dueDate: props.task?.dueDate ? getDateTimeInputValue(props.task.dueDate) : '',
+  dueDate: props.task?.dueDate ? props.task.dueDate.split('T')[0] : props.initialDueDate || '',
   priority: props.task?.priority || taskStore.settings.defaultPriority,
   category: props.task?.category || '',
   reminder: props.task?.reminder || {
@@ -212,7 +236,8 @@ const priorities: Array<{ value: TaskPriority; label: string; activeClass: strin
   {
     value: 'medium',
     label: '中',
-    activeClass: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200',
+    activeClass:
+      'border-yellow-500 bg-yellow-50 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200',
   },
   {
     value: 'low',
@@ -223,30 +248,87 @@ const priorities: Array<{ value: TaskPriority; label: string; activeClass: strin
 
 const categories = computed(() => taskStore.settings.categories)
 
-function handleSubmit() {
-  const taskData: Partial<Task> = {
-    title: formData.value.title,
-    description: formData.value.description || undefined,
-    dueDate: formData.value.dueDate || undefined,
-    priority: formData.value.priority,
-    category: formData.value.category || undefined,
-    reminder: formData.value.reminder.enabled ? formData.value.reminder : undefined,
-    parentId: props.parentId,
+// 监听标题和描述变化，触发自动分类
+watch(
+  () => [formData.value.title, formData.value.description],
+  () => {
+    if (!isEdit.value && !props.task && !formData.value.category) {
+      triggerAutoClassify()
+    }
   }
+)
 
-  if (isEdit.value && props.task) {
-    updateTask(props.task.id, taskData)
-  } else {
-    createTask(taskData)
+let classifyTimer: ReturnType<typeof setTimeout> | null = null
+
+async function triggerAutoClassify() {
+  if (classifyTimer) clearTimeout(classifyTimer)
+  classifyTimer = setTimeout(async () => {
+    if (formData.value.title && !formData.value.category) {
+      isClassifying.value = true
+      try {
+        const llmEnabled = taskStore.settings.llm?.enabled || false
+        const apiKey = taskStore.settings.llm?.apiKey || ''
+        const prefs = taskStore.settings.llm?.prefs || []
+        const { autoCategorize } = await import('@/utils/category')
+        const category = await autoCategorize(
+          formData.value.title,
+          formData.value.description || undefined,
+          taskStore.settings.categoryRules,
+          taskStore.settings.categories,
+          llmEnabled,
+          apiKey,
+          prefs
+        )
+        formData.value.category = category
+      } finally {
+        isClassifying.value = false
+      }
+    }
+  }, 500)
+}
+
+function onCategoryChange() {
+  if (isEdit.value && props.task && props.task.category !== formData.value.category) {
+    saveCategoryPreference(props.task.id, props.task.category || '', formData.value.category)
   }
+}
 
-  emit('close')
+async function handleSubmit() {
+  isSubmitting.value = true
+  try {
+    const taskData: Partial<Task> = {
+      title: formData.value.title,
+      description: formData.value.description || undefined,
+      dueDate: formData.value.dueDate ? `${formData.value.dueDate}T00:00:00` : undefined,
+      isAllDay: true,
+      priority: formData.value.priority,
+      category: formData.value.category || undefined,
+      reminder: formData.value.reminder.enabled ? formData.value.reminder : undefined,
+      parentId: props.parentId,
+    }
+
+    if (isEdit.value && props.task) {
+      updateTask(props.task.id, taskData)
+    } else {
+      await createTask(taskData)
+    }
+
+    emit('close')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+function handleDelete() {
+  if (props.task && confirm('确定要删除这个任务吗？')) {
+    deleteTask(props.task.id)
+    emit('close')
+  }
 }
 
 function handleCancel() {
   emit('close')
 }
 
-// ESC键取消
 useKeyboardShortcut('Escape', handleCancel)
 </script>

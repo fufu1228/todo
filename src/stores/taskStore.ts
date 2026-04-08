@@ -1,5 +1,5 @@
-import { reactive, computed } from 'vue'
-import type { Task, TaskFilter, TaskSort, AppSettings } from '@/types/task'
+import { reactive, computed, ref } from 'vue'
+import type { Task, TaskFilter, TaskSort, AppSettings, AppData } from '@/types/task'
 import { loadAppData, saveAppData } from '@/utils/storage'
 import { autoCategorize } from '@/utils/category'
 import { dayjs } from '@/utils/date'
@@ -11,7 +11,42 @@ interface TaskStore {
   sort: TaskSort
 }
 
-const appData = loadAppData()
+/**
+ * 数据迁移：兼容旧字段 deadline → dueDate
+ */
+function migrateTasks(data: AppData): AppData {
+  const migrated = { ...data, tasks: [...data.tasks] }
+  migrated.tasks = migrated.tasks.map(task => {
+    const t = { ...task }
+    // 兼容旧字段 deadline
+    if ((t as any).deadline && !t.dueDate) {
+      t.dueDate = (t as any).deadline
+      delete (t as any).deadline
+    }
+    // 确保 isAllDay 有默认值
+    if (t.isAllDay === undefined) {
+      t.isAllDay = true
+    }
+    // 迁移子任务
+    if (t.subtasks) {
+      t.subtasks = t.subtasks.map(st => {
+        const s = { ...st }
+        if ((s as any).deadline && !s.dueDate) {
+          s.dueDate = (s as any).deadline
+          delete (s as any).deadline
+        }
+        if (s.isAllDay === undefined) {
+          s.isAllDay = true
+        }
+        return s
+      })
+    }
+    return t
+  })
+  return migrated
+}
+
+const appData = migrateTasks(loadAppData())
 
 export const taskStore = reactive<TaskStore>({
   tasks: appData.tasks,
@@ -19,6 +54,15 @@ export const taskStore = reactive<TaskStore>({
   filter: {},
   sort: appData.settings.sortBy,
 })
+
+/**
+ * 今日 0 点时间戳（响应式）
+ */
+export const todayTimestamp = ref(getTodayStart())
+
+function getTodayStart(): number {
+  return new Date().setHours(0, 0, 0, 0)
+}
 
 /**
  * 保存数据到本地存储
@@ -41,21 +85,33 @@ function generateId(): string {
 /**
  * 创建新任务
  */
-export function createTask(task: Partial<Task>): Task {
+export async function createTask(task: Partial<Task>): Promise<Task> {
+  const llmEnabled = taskStore.settings.llm?.enabled || false
+  const apiKey = taskStore.settings.llm?.apiKey || ''
+  const prefs = taskStore.settings.llm?.prefs || []
+
+  let category = task.category
+  if (!category) {
+    category = await autoCategorize(
+      task.title || '',
+      task.description,
+      taskStore.settings.categoryRules,
+      taskStore.settings.categories,
+      llmEnabled,
+      apiKey,
+      prefs
+    )
+  }
+
   const newTask: Task = {
     id: generateId(),
     title: task.title || '未命名任务',
     description: task.description,
     dueDate: task.dueDate,
+    isAllDay: task.isAllDay ?? true,
     priority: task.priority || taskStore.settings.defaultPriority,
     status: 'pending',
-    category:
-      task.category ||
-      autoCategorize(
-        task.title || '',
-        task.description,
-        taskStore.settings.categoryRules
-      ),
+    category,
     parentId: task.parentId,
     subtasks: [],
     reminder: task.reminder,
@@ -63,13 +119,10 @@ export function createTask(task: Partial<Task>): Task {
     updatedAt: new Date().toISOString(),
   }
 
-  // 如果是子任务，添加到父任务
   if (task.parentId) {
-    const parentTask = taskStore.tasks.find((t) => t.id === task.parentId)
+    const parentTask = taskStore.tasks.find(t => t.id === task.parentId)
     if (parentTask) {
-      if (!parentTask.subtasks) {
-        parentTask.subtasks = []
-      }
+      if (!parentTask.subtasks) parentTask.subtasks = []
       parentTask.subtasks.push(newTask)
       parentTask.updatedAt = new Date().toISOString()
     }
@@ -87,9 +140,7 @@ export function createTask(task: Partial<Task>): Task {
 export function updateTask(id: string, updates: Partial<Task>): void {
   const task = findTaskById(id)
   if (task) {
-    Object.assign(task, updates, {
-      updatedAt: new Date().toISOString(),
-    })
+    Object.assign(task, updates, { updatedAt: new Date().toISOString() })
     persistData()
   }
 }
@@ -98,15 +149,14 @@ export function updateTask(id: string, updates: Partial<Task>): void {
  * 删除任务
  */
 export function deleteTask(id: string): void {
-  const index = taskStore.tasks.findIndex((t) => t.id === id)
+  const index = taskStore.tasks.findIndex(t => t.id === id)
   if (index !== -1) {
     taskStore.tasks.splice(index, 1)
     persistData()
   } else {
-    // 可能是子任务，需要从父任务中删除
     for (const task of taskStore.tasks) {
       if (task.subtasks) {
-        const subtaskIndex = task.subtasks.findIndex((t) => t.id === id)
+        const subtaskIndex = task.subtasks.findIndex(t => t.id === id)
         if (subtaskIndex !== -1) {
           task.subtasks.splice(subtaskIndex, 1)
           task.updatedAt = new Date().toISOString()
@@ -122,7 +172,7 @@ export function deleteTask(id: string): void {
  * 批量删除任务
  */
 export function deleteTasks(ids: string[]): void {
-  taskStore.tasks = taskStore.tasks.filter((t) => !ids.includes(t.id))
+  taskStore.tasks = taskStore.tasks.filter(t => !ids.includes(t.id))
   persistData()
 }
 
@@ -138,14 +188,47 @@ export function toggleTaskStatus(id: string): void {
   }
 }
 
+/**
+ * 保存用户分类修正偏好
+ */
+export function saveCategoryPreference(
+  taskId: string,
+  originalCategory: string,
+  newCategory: string
+): void {
+  const task = findTaskById(taskId)
+  if (!task) return
+
+  const prefs = taskStore.settings.llm?.prefs || []
+  const text = `${task.title} ${task.description || ''}`
+  const existingIndex = prefs.findIndex(p => p.text === text)
+  if (existingIndex !== -1) {
+    prefs[existingIndex].userCorrectedCategory = newCategory
+  } else {
+    prefs.push({
+      text,
+      predictedCategory: originalCategory,
+      userCorrectedCategory: newCategory,
+      learnedKeywords: text
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length > 1),
+    })
+  }
+
+  taskStore.settings.llm = {
+    ...taskStore.settings.llm,
+    prefs: prefs.slice(-100),
+  }
+  persistData()
+}
+
 function shouldResetRecurringTask(task: Task, now = dayjs()): boolean {
   const reminder = task.reminder
   if (!reminder?.enabled || reminder.repeatType === 'none') return false
   if (task.status !== 'completed') return false
 
   const lastCycle = dayjs(reminder.lastCycleAt || task.updatedAt || task.createdAt)
-
-  // 若配置了提醒时间，则到达该时刻后才重置，避免在凌晨提前重置
   const hasReminderTime = !!reminder.reminderTime
   let isTimeReady = true
   if (hasReminderTime && reminder.reminderTime) {
@@ -153,7 +236,6 @@ function shouldResetRecurringTask(task: Task, now = dayjs()): boolean {
     const threshold = dayjs().hour(hour).minute(minute).second(0).millisecond(0)
     isTimeReady = now.isAfter(threshold) || now.isSame(threshold)
   }
-
   if (!isTimeReady) return false
 
   switch (reminder.repeatType) {
@@ -170,93 +252,104 @@ function shouldResetRecurringTask(task: Task, now = dayjs()): boolean {
 
 function resetRecurringInList(tasks: Task[], now: ReturnType<typeof dayjs>): boolean {
   let changed = false
-
-  tasks.forEach((task) => {
+  tasks.forEach(task => {
     if (shouldResetRecurringTask(task, now)) {
       task.status = 'pending'
       task.updatedAt = now.toISOString()
-      if (task.reminder) {
-        task.reminder.lastCycleAt = now.toISOString()
-      }
+      if (task.reminder) task.reminder.lastCycleAt = now.toISOString()
       changed = true
     }
-
     if (task.subtasks?.length) {
       changed = resetRecurringInList(task.subtasks, now) || changed
     }
   })
-
   return changed
 }
 
 export function resetRecurringTasksIfNeeded(): void {
   const now = dayjs()
   const changed = resetRecurringInList(taskStore.tasks, now)
-  if (changed) {
-    persistData()
-  }
+  if (changed) persistData()
 }
 
 /**
  * 根据ID查找任务（包括子任务）
  */
 export function findTaskById(id: string): Task | undefined {
-  // 先查找主任务
-  let task = taskStore.tasks.find((t) => t.id === id)
+  let task = taskStore.tasks.find(t => t.id === id)
   if (task) return task
-
-  // 再查找子任务
   for (const t of taskStore.tasks) {
     if (t.subtasks) {
-      task = t.subtasks.find((st) => st.id === id)
+      task = t.subtasks.find(st => st.id === id)
       if (task) return task
     }
   }
-
   return undefined
 }
 
 /**
- * 获取任务的完成进度（用于父任务）
+ * 获取任务的完成进度
  */
 export function getTaskProgress(task: Task): number {
   if (!task.subtasks || task.subtasks.length === 0) {
     return task.status === 'completed' ? 100 : 0
   }
-
-  const completedCount = task.subtasks.filter((st) => st.status === 'completed').length
+  const completedCount = task.subtasks.filter(st => st.status === 'completed').length
   return Math.round((completedCount / task.subtasks.length) * 100)
 }
 
 /**
- * 过滤和排序后的任务列表
+ * 今日列表：只显示未完成且截止日期 <= 今天的任务
+ * 逾期任务（dueDate < today）高亮显示
+ */
+export const todayTasks = computed(() => {
+  const todayStart = todayTimestamp.value
+  const allTasks = collectAllTasks(taskStore.tasks)
+
+  return allTasks
+    .filter(t => {
+      // 只显示未完成的任务
+      if (t.status === 'completed') return false
+      // 必须有截止日期
+      if (!t.dueDate) return false
+      // 截止日期 <= 今天
+      const dueTs = new Date(t.dueDate).setHours(0, 0, 0, 0)
+      return dueTs <= todayStart
+    })
+    .sort((a, b) => {
+      // 逾期任务排在前面，然后按 dueDate 升序
+      const aDue = a.dueDate ? new Date(a.dueDate).setHours(0, 0, 0, 0) : Infinity
+      const bDue = b.dueDate ? new Date(b.dueDate).setHours(0, 0, 0, 0) : Infinity
+      const aOverdue = aDue < todayStart
+      const bOverdue = bDue < todayStart
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+      return aDue - bDue
+    })
+})
+
+/**
+ * 过滤和排序后的任务列表（用于全量展示）
  */
 export const filteredAndSortedTasks = computed(() => {
   let tasks = [...taskStore.tasks]
 
-  // 应用过滤器
   if (taskStore.filter.status) {
-    tasks = tasks.filter((t) => t.status === taskStore.filter.status)
+    tasks = tasks.filter(t => t.status === taskStore.filter.status)
   }
-
   if (taskStore.filter.category) {
-    tasks = tasks.filter((t) => t.category === taskStore.filter.category)
+    tasks = tasks.filter(t => t.category === taskStore.filter.category)
   }
-
   if (taskStore.filter.priority) {
-    tasks = tasks.filter((t) => t.priority === taskStore.filter.priority)
+    tasks = tasks.filter(t => t.priority === taskStore.filter.priority)
   }
-
   if (taskStore.filter.search) {
     const search = taskStore.filter.search.toLowerCase()
     tasks = tasks.filter(
-      (t) =>
-        t.title.toLowerCase().includes(search) ||
-        t.description?.toLowerCase().includes(search)
+      t => t.title.toLowerCase().includes(search) || t.description?.toLowerCase().includes(search)
     )
   }
 
-  // 应用排序
   tasks.sort((a, b) => {
     const { field, order } = taskStore.sort
     let aValue: any
@@ -267,11 +360,12 @@ export const filteredAndSortedTasks = computed(() => {
         aValue = a.dueDate ? new Date(a.dueDate).getTime() : 0
         bValue = b.dueDate ? new Date(b.dueDate).getTime() : 0
         break
-      case 'priority':
+      case 'priority': {
         const priorityOrder = { high: 3, medium: 2, low: 1 }
         aValue = priorityOrder[a.priority]
         bValue = priorityOrder[b.priority]
         break
+      }
       case 'createdAt':
         aValue = new Date(a.createdAt).getTime()
         bValue = new Date(b.createdAt).getTime()
@@ -293,6 +387,20 @@ export const filteredAndSortedTasks = computed(() => {
 })
 
 /**
+ * 收集所有任务（包括子任务）
+ */
+function collectAllTasks(tasks: Task[]): Task[] {
+  const result: Task[] = []
+  tasks.forEach(t => {
+    result.push(t)
+    if (t.subtasks) {
+      result.push(...collectAllTasks(t.subtasks))
+    }
+  })
+  return result
+}
+
+/**
  * 更新设置
  */
 export function updateSettings(settings: Partial<AppSettings>): void {
@@ -307,4 +415,11 @@ export function updateSort(sort: TaskSort): void {
   taskStore.sort = sort
   taskStore.settings.sortBy = sort
   persistData()
+}
+
+/**
+ * 刷新今日时间戳（跨日刷新）
+ */
+export function refreshTodayTimestamp(): void {
+  todayTimestamp.value = getTodayStart()
 }
