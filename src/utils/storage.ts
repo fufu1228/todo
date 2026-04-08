@@ -1,7 +1,22 @@
-import type { AppData, AppSettings } from '@/types/task'
+import type { AppData, AppSettings, SmartReminderRule } from '@/types/task'
 
 const STORAGE_KEY = 'todo_app_data'
 const DATA_VERSION = '1.0.0'
+
+const defaultSmartReminderRules: SmartReminderRule[] = [
+  {
+    id: 'default',
+    name: '默认规则',
+    advanceMinutes: 30,
+    reminderPeriodStart: '08:00',
+    reminderPeriodEnd: '22:00',
+    highFrequencyEnabled: false,
+    highFrequencyInterval: 15,
+    highFrequencyPriority: 'high',
+    overdueSecondaryEnabled: true,
+    overdueSecondaryInterval: 120,
+  },
+]
 
 const defaultSettings: AppSettings = {
   theme: 'auto',
@@ -26,6 +41,18 @@ const defaultSettings: AppSettings = {
     生活: ['购物', '缴费', '维修', '清洁', '家务'],
     购物: ['买', '购物', '采购', '下单'],
     健康: ['运动', '体检', '健身', '跑步', '锻炼'],
+  },
+  smartReminderRules: defaultSmartReminderRules,
+  llm: {
+    enabled: false,
+    apiKey: '',
+    model: 'deepseek-chat',
+    prefs: [],
+  },
+  cloudSync: {
+    enabled: false,
+    envId: '',
+    authType: 'anonymous',
   },
 }
 
@@ -121,7 +148,7 @@ export function downloadData(data: AppData, filename = 'todo-backup.json'): void
 export function readDataFromFile(file: File): Promise<AppData> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const data = importData(e.target?.result as string)
         resolve(data)

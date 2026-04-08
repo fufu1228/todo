@@ -4,23 +4,72 @@ export type RepeatType = 'daily' | 'weekly' | 'monthly' | 'none'
 
 export interface ReminderConfig {
   enabled: boolean
-  advanceMinutes: number // 提前提醒分钟数
-  repeatType?: RepeatType // 重复类型
-  reminderTime?: string // 提醒时段 HH:mm
-  lastReminded?: string // 上次提醒时间
-  lastCycleAt?: string // 上次周期重置时间
+  advanceMinutes: number
+  repeatType?: RepeatType
+  reminderTime?: string
+  lastReminded?: string
+  lastCycleAt?: string
+}
+
+export interface SmartReminderRule {
+  id: string
+  name: string
+  advanceMinutes: number
+  reminderPeriodStart: string
+  reminderPeriodEnd: string
+  highFrequencyEnabled: boolean
+  highFrequencyInterval: number
+  highFrequencyPriority: TaskPriority
+  overdueSecondaryEnabled: boolean
+  overdueSecondaryInterval: number
+}
+
+export interface LLMPref {
+  text: string
+  predictedCategory: string
+  userCorrectedCategory?: string
+  learnedKeywords: string[]
+}
+
+export interface LLMSettings {
+  enabled: boolean
+  apiKey: string
+  model: string
+  prefs: LLMPref[]
+}
+
+export interface CloudSyncSettings {
+  enabled: boolean
+  envId: string
+  lastSyncAt?: string
+  userId?: string
+  authType: 'anonymous' | 'email'
+}
+
+export interface AppSettings {
+  theme: 'light' | 'dark' | 'auto'
+  defaultPriority: TaskPriority
+  defaultReminderMinutes: number
+  sortBy: TaskSort
+  categories: string[]
+  categoryColors: Record<string, string>
+  categoryRules: Record<string, string[]>
+  smartReminderRules: SmartReminderRule[]
+  llm: LLMSettings
+  cloudSync: CloudSyncSettings
 }
 
 export interface Task {
   id: string
   title: string
   description?: string
-  dueDate?: string // ISO格式日期时间
+  dueDate?: string
+  isAllDay?: boolean
   priority: TaskPriority
   status: TaskStatus
   category?: string
-  parentId?: string // 父任务ID
-  subtasks?: Task[] // 子任务列表
+  parentId?: string
+  subtasks?: Task[]
   reminder?: ReminderConfig
   createdAt: string
   updatedAt: string
@@ -38,18 +87,15 @@ export interface TaskSort {
   order: 'asc' | 'desc'
 }
 
-export interface AppSettings {
-  theme: 'light' | 'dark' | 'auto'
-  defaultPriority: TaskPriority
-  defaultReminderMinutes: number
-  sortBy: TaskSort
-  categories: string[]
-  categoryColors: Record<string, string>
-  categoryRules: Record<string, string[]> // 分类关键词规则
-}
-
 export interface AppData {
   version: string
   tasks: Task[]
   settings: AppSettings
+}
+
+export interface InAppReminder {
+  id: string
+  task: Task
+  type: 'advance' | 'periodic' | 'overdue'
+  createdAt: string
 }

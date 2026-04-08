@@ -1,6 +1,23 @@
 import { onMounted, onUnmounted } from 'vue'
 import { taskStore, updateTask, resetRecurringTasksIfNeeded } from '@/stores/taskStore'
-import { shouldRemind, isRepeatReminderTime, triggerReminder } from '@/utils/reminder'
+import {
+  shouldRemind,
+  isRepeatReminderTime,
+  triggerReminder,
+  shouldHighFrequencyRemind,
+  shouldOverdueSecondaryRemind,
+  isInReminderPeriod,
+  isTaskOverdue,
+} from '@/utils/reminder'
+import type { InAppReminder } from '@/types/task'
+
+/**
+ * 发送应用内提醒事件
+ */
+function emitInAppReminder(reminder: InAppReminder) {
+  const event = new CustomEvent('todo-reminder', { detail: reminder })
+  window.dispatchEvent(event)
+}
 
 /**
  * 提醒管理组合函数
@@ -12,14 +29,14 @@ export function useReminder() {
    * 检查所有任务的提醒
    */
   function checkAllReminders() {
-    // 每次检查提醒前，先处理重复任务自动重置
     resetRecurringTasksIfNeeded()
 
-    // 检查主任务
-    taskStore.tasks.forEach((task) => {
-      if (shouldRemind(task) || isRepeatReminderTime(task)) {
-        triggerReminder(task, (t) => {
-          // 更新最后提醒时间
+    const rule = taskStore.settings.smartReminderRules?.[0]
+
+    taskStore.tasks.forEach(task => {
+      // 1. 截止前提醒
+      if (shouldRemind(task) && isInReminderPeriod(task, rule)) {
+        const reminder = triggerReminder(task, 'advance', t => {
           if (t.reminder) {
             updateTask(t.id, {
               reminder: {
@@ -29,15 +46,60 @@ export function useReminder() {
             })
           }
         })
+        if (reminder) emitInAppReminder(reminder)
+      }
+
+      // 2. 周期性任务提醒
+      if (isRepeatReminderTime(task) && isInReminderPeriod(task, rule)) {
+        const reminder = triggerReminder(task, 'periodic', t => {
+          if (t.reminder) {
+            updateTask(t.id, {
+              reminder: {
+                ...t.reminder,
+                lastReminded: new Date().toISOString(),
+              },
+            })
+          }
+        })
+        if (reminder) emitInAppReminder(reminder)
+      }
+
+      // 3. 重要任务高频提醒
+      if (shouldHighFrequencyRemind(task, rule)) {
+        const reminder = triggerReminder(task, 'advance', t => {
+          if (t.reminder) {
+            updateTask(t.id, {
+              reminder: {
+                ...t.reminder,
+                lastReminded: new Date().toISOString(),
+              },
+            })
+          }
+        })
+        if (reminder) emitInAppReminder(reminder)
+      }
+
+      // 4. 逾期二次提醒
+      if (isTaskOverdue(task) && shouldOverdueSecondaryRemind(task, rule)) {
+        const reminder = triggerReminder(task, 'overdue', t => {
+          if (t.reminder) {
+            updateTask(t.id, {
+              reminder: {
+                ...t.reminder,
+                lastReminded: new Date().toISOString(),
+              },
+            })
+          }
+        })
+        if (reminder) emitInAppReminder(reminder)
       }
     })
 
-    // 检查子任务
-    taskStore.tasks.forEach((task) => {
+    taskStore.tasks.forEach(task => {
       if (task.subtasks) {
-        task.subtasks.forEach((subtask) => {
+        task.subtasks.forEach(subtask => {
           if (shouldRemind(subtask) || isRepeatReminderTime(subtask)) {
-            triggerReminder(subtask, (t) => {
+            const reminder = triggerReminder(subtask, 'advance', t => {
               if (t.reminder) {
                 updateTask(t.id, {
                   reminder: {
@@ -47,6 +109,7 @@ export function useReminder() {
                 })
               }
             })
+            if (reminder) emitInAppReminder(reminder)
           }
         })
       }
@@ -69,18 +132,16 @@ export function useReminder() {
       return Promise.resolve(false)
     }
 
-    return Notification.requestPermission().then((permission) => {
+    return Notification.requestPermission().then(permission => {
       return permission === 'granted'
     })
   }
 
   /**
- * 启动提醒检查
- */
+   * 启动提醒检查
+   */
   function startReminderCheck() {
-    // 每分钟检查一次
     reminderInterval = window.setInterval(checkAllReminders, 60000)
-    // 立即检查一次
     checkAllReminders()
   }
 
@@ -95,8 +156,10 @@ export function useReminder() {
   }
 
   onMounted(() => {
-    requestNotificationPermission().then((granted) => {
+    requestNotificationPermission().then(granted => {
       if (granted) {
+        startReminderCheck()
+      } else {
         startReminderCheck()
       }
     })
