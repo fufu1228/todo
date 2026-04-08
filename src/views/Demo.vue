@@ -11,23 +11,31 @@
               title="返回待办"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
               </svg>
             </router-link>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-              演示中心
-            </h1>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">演示中心</h1>
           </div>
 
           <div class="flex items-center gap-2">
             <router-link
-              to="/demo"
-              class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+              to="/calendar"
+              class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-lg transition-colors"
+              title="日历"
             >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7V5z" />
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
-              演示
             </router-link>
             <router-link
               to="/settings"
@@ -41,7 +49,12 @@
                   stroke-width="2"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                 />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
             </router-link>
           </div>
@@ -51,7 +64,9 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
       <!-- Hero -->
-      <section class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <section
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+      >
         <div class="grid md:grid-cols-2 gap-6 items-start">
           <div class="space-y-4">
             <div>
@@ -70,7 +85,12 @@
                 class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
               >
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 5v14M5 12h14"
+                  />
                 </svg>
                 加载演示数据
               </button>
@@ -102,7 +122,9 @@
           <!-- 预览（PC/移动两套展示效果） -->
           <div class="space-y-4">
             <!-- PC -->
-            <div class="hidden md:block bg-white/70 dark:bg-gray-900/20 rounded-lg border border-gray-200/80 dark:border-gray-700/80 p-4">
+            <div
+              class="hidden md:block bg-white/70 dark:bg-gray-900/20 rounded-lg border border-gray-200/80 dark:border-gray-700/80 p-4"
+            >
               <div class="flex items-center justify-between gap-3 mb-3">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100">实时预览（PC）</h3>
                 <div class="flex items-center gap-2">
@@ -112,16 +134,12 @@
                     title="新建任务"
                   >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                  <button
-                    @click="runReminderCheckOnce"
-                    class="p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    title="立即检查提醒"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a1 1 0 10-2 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0m6 0H9" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -135,8 +153,18 @@
                     placeholder="搜索任务..."
                     class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
-                  <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    class="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </div>
 
@@ -191,7 +219,12 @@
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -211,16 +244,30 @@
                 v-else
                 class="text-center py-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">暂无任务</h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">点击上方「加载演示数据」体验完整功能。</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  点击上方「加载演示数据」体验完整功能。
+                </p>
               </div>
             </div>
 
             <!-- Mobile -->
-            <div class="md:hidden bg-white/70 dark:bg-gray-900/20 rounded-lg border border-gray-200/80 dark:border-gray-700/80 p-4">
+            <div
+              class="md:hidden bg-white/70 dark:bg-gray-900/20 rounded-lg border border-gray-200/80 dark:border-gray-700/80 p-4"
+            >
               <div class="flex items-center justify-between gap-3 mb-3">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100">实时预览（移动）</h3>
                 <button
@@ -229,7 +276,12 @@
                   title="新建任务"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                 </button>
               </div>
@@ -296,7 +348,12 @@
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -305,23 +362,37 @@
               <div class="mt-4">
                 <div v-if="filteredTasks.length > 0" class="space-y-3">
                   <TaskItem
-                  v-for="task in filteredTasks"
-                  :key="task.id"
-                  :task="task"
-                  @edit="handleEdit"
-                  @add-subtask="handleAddSubtask"
-                  @edit-subtask="handleEdit"
-                />
+                    v-for="task in filteredTasks"
+                    :key="task.id"
+                    :task="task"
+                    @edit="handleEdit"
+                    @add-subtask="handleAddSubtask"
+                    @edit-subtask="handleEdit"
+                  />
                 </div>
                 <div
                   v-else
                   class="text-center py-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <svg
+                    class="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
                   </svg>
-                  <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">暂无任务</h3>
-                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">点击上方「加载演示数据」体验。</p>
+                  <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    暂无任务
+                  </h3>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    点击上方「加载演示数据」体验。
+                  </p>
                 </div>
               </div>
             </div>
@@ -334,17 +405,33 @@
         <div class="flex items-end justify-between gap-3">
           <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">各功能演示介绍</h3>
           <div class="hidden lg:flex text-sm text-gray-500 dark:text-gray-400">
-            <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700">PC 更适合完整筛选与排序</span>
-            <span class="ml-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700">移动更适合手势与快速操作</span>
+            <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700"
+              >PC 更适合完整筛选与排序</span
+            >
+            <span class="ml-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700"
+              >移动更适合手势与快速操作</span
+            >
           </div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
-          <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
             <div class="flex items-center justify-between gap-3">
               <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 任务管理
               </h4>
@@ -357,10 +444,22 @@
             </p>
           </article>
 
-          <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
             <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <svg class="w-5 h-5 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="w-5 h-5 text-green-600 dark:text-green-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               进度与手势操作
             </h4>
@@ -372,11 +471,28 @@
             </p>
           </article>
 
-          <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
             <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <svg
+                class="w-5 h-5 text-blue-600 dark:text-blue-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
               智能分类
             </h4>
@@ -388,25 +504,76 @@
             </p>
           </article>
 
-          <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
             <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               提醒通知
             </h4>
             <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
-              支持提前提醒（分钟）、重复类型（每天/每周/每月）与提醒时段配置。
+              支持提前提醒（分钟）、重复类型（每天/每周/每月）与提醒时段配置。逾期任务支持二次提醒，重要任务可高频提醒。
             </p>
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              你也可以点击右侧的「立即检查提醒」（PC）来验证通知逻辑（可能需要浏览器允许通知）。
+              提醒通过浏览器通知 + 应用内弹窗双通道推送。
             </p>
           </article>
 
-          <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
             <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8m-8 4h8m-8-8h8M21 16V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8m16 0a2 2 0 01-2 2H7a2 2 0 01-2-2m16 0z" />
+              <svg
+                class="w-5 h-5 text-cyan-600 dark:text-cyan-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              日历视图
+            </h4>
+            <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
+              按月查看任务分布，点击日期可直接新建任务，点击任务卡片可编辑。已完成任务灰色展示，逾期任务高亮。
+            </p>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              内置数据统计面板：可视化展示本日/本周/本月的任务完成进度。
+            </p>
+          </article>
+
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
+            <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
+              <svg
+                class="w-5 h-5 text-purple-600 dark:text-purple-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 12h8m-8 4h8m-8-8h8M21 16V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8m16 0a2 2 0 01-2 2H7a2 2 0 01-2-2m16 0z"
+                />
               </svg>
               导入导出
             </h4>
@@ -418,10 +585,22 @@
             </p>
           </article>
 
-          <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <article
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+          >
             <h4 class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <svg class="w-5 h-5 text-gray-700 dark:text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="w-5 h-5 text-gray-700 dark:text-gray-200"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               快捷键与编辑
             </h4>
@@ -436,7 +615,9 @@
       </section>
 
       <!-- 导入导出 -->
-      <section class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <section
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+      >
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">数据导入导出</h3>
@@ -477,7 +658,9 @@
     >
       <h3 class="font-medium mb-2 text-gray-900 dark:text-gray-100">快捷键提示</h3>
       <ul class="space-y-1 text-gray-600 dark:text-gray-400">
-        <li><kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">Ctrl/Cmd + N</kbd> 新建任务</li>
+        <li>
+          <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">Ctrl/Cmd + N</kbd> 新建任务
+        </li>
         <li><kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">Esc</kbd> 取消/关闭</li>
       </ul>
     </div>
@@ -491,12 +674,18 @@ import { useKeyboardShortcut } from '@/composables/useKeyboardShortcut'
 import TaskItem from '@/components/TaskItem.vue'
 import TaskForm from '@/components/TaskForm.vue'
 
-import { taskStore, filteredAndSortedTasks, updateSort, createTask, updateTask, deleteTasks } from '@/stores/taskStore'
+import {
+  taskStore,
+  filteredAndSortedTasks,
+  updateSort,
+  createTask,
+  updateTask,
+  deleteTasks,
+} from '@/stores/taskStore'
 import type { Task, TaskPriority, TaskStatus } from '@/types/task'
 
 import { dayjs } from '@/utils/date'
 import { downloadData, readDataFromFile, saveAppData } from '@/utils/storage'
-import { triggerReminder } from '@/utils/reminder'
 
 const DEMO_BACKUP_KEY = 'todo_demo_backup'
 
@@ -541,7 +730,7 @@ watch(
       search: search || undefined,
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watch(
@@ -552,7 +741,7 @@ watch(
       order,
     })
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 function toggleSortOrder() {
@@ -603,22 +792,28 @@ function backupCurrentData() {
 }
 
 function clearAllTasks() {
-  const ids = taskStore.tasks.map((t) => t.id)
+  const ids = taskStore.tasks.map(t => t.id)
   if (ids.length === 0) return
   deleteTasks(ids)
 }
 
-function seedDemoTasks() {
+async function seedDemoTasks() {
   const now = dayjs()
 
-  const overdueDueDate = now.subtract(3, 'day').hour(9).minute(0).second(0).millisecond(0).toISOString()
+  const overdueDueDate = now
+    .subtract(3, 'day')
+    .hour(9)
+    .minute(0)
+    .second(0)
+    .millisecond(0)
+    .toISOString()
   const dueSoonDueDate = now.add(1, 'day').hour(10).minute(0).second(0).millisecond(0).toISOString()
   const futureDueDate = now.add(7, 'day').hour(9).minute(0).second(0).millisecond(0).toISOString()
 
   const lastReminded = new Date().toISOString()
 
   // 1) 逾期任务：用于展示红色截止时间
-  createTask({
+  await createTask({
     title: '项目复盘会议',
     description: '整理报告、发送邮件并跟进下一步任务（演示逾期）',
     dueDate: overdueDueDate,
@@ -632,7 +827,7 @@ function seedDemoTasks() {
   })
 
   // 2) 即将到期：用于展示黄色截止时间
-  createTask({
+  await createTask({
     title: '学习 Vue3 笔记',
     description: '阅读文档并记录笔记（演示即将到期）',
     dueDate: dueSoonDueDate,
@@ -647,7 +842,7 @@ function seedDemoTasks() {
   })
 
   // 3) 普通任务：用于展示默认样式
-  createTask({
+  await createTask({
     title: '购物下单清单',
     description: '买牛奶并下单，记录采购进度（演示分类）',
     dueDate: futureDueDate,
@@ -662,7 +857,7 @@ function seedDemoTasks() {
   })
 
   // 4) 已完成任务：用于展示透明度
-  const completed = createTask({
+  const completed = await createTask({
     title: '健康体检计划（已完成）',
     description: '提交资料并确认预约结果',
     dueDate: now.subtract(1, 'day').hour(10).minute(0).second(0).millisecond(0).toISOString(),
@@ -677,7 +872,7 @@ function seedDemoTasks() {
   updateTask(completed.id, { status: 'completed' })
 
   // 5) 子任务示例：用于展示子任务复选框与联动
-  const parent = createTask({
+  const parent = await createTask({
     title: '健康体检计划',
     description: '准备体检事项与材料（演示子任务）',
     dueDate: futureDueDate,
@@ -691,7 +886,7 @@ function seedDemoTasks() {
     },
   })
 
-  createTask({
+  await createTask({
     parentId: parent.id,
     title: '预约体检时间',
     description: '选择合适的日期与时段',
@@ -705,7 +900,7 @@ function seedDemoTasks() {
     },
   })
 
-  createTask({
+  await createTask({
     parentId: parent.id,
     title: '准备证件资料',
     description: '身份证、既往病历与相关报告',
@@ -720,11 +915,14 @@ function seedDemoTasks() {
   })
 }
 
-function loadDemoData() {
+async function loadDemoData() {
   if (demoMode.value) return
   if (!localStorage.getItem('todo_app_data')) {
     // 理论上不会发生：localStorage 一般由应用初始化提供
-    localStorage.setItem('todo_app_data', JSON.stringify({ version: '1.0.0', tasks: [], settings: taskStore.settings }))
+    localStorage.setItem(
+      'todo_app_data',
+      JSON.stringify({ version: '1.0.0', tasks: [], settings: taskStore.settings })
+    )
   }
 
   // 备份真实数据后加载演示数据
@@ -744,28 +942,6 @@ function restoreBackup() {
 
   demoMode.value = false
   window.location.reload()
-}
-
-function runReminderCheckOnce() {
-  // 只做一次检查，不开启轮询；并在触发后更新 lastReminded，避免重复弹通知。
-  const update = (t: Task) => {
-    if (t.reminder) {
-      updateTask(t.id, {
-        reminder: {
-          ...t.reminder,
-          lastReminded: new Date().toISOString(),
-        },
-      })
-    }
-  }
-
-  taskStore.tasks.forEach((task) => {
-    triggerReminder(task, update)
-
-    if (task.subtasks?.length) {
-      task.subtasks.forEach((st) => triggerReminder(st, update))
-    }
-  })
 }
 
 function handleExport() {
