@@ -6,28 +6,16 @@
         <div class="flex items-center justify-between">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">我的待办</h1>
           <div class="flex items-center gap-3">
-            <!-- 搜索 -->
-            <div class="relative hidden md:block">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="搜索任务..."
-                class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-64"
-              />
-              <svg
-                class="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
+            <!-- 用户头像 -->
+            <router-link
+              to="/profile"
+              class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              title="个人中心"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-            </div>
+            </router-link>
             <!-- 演示 -->
             <router-link
               to="/demo"

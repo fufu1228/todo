@@ -4,6 +4,13 @@
 
 ## ✨ 功能特性
 
+### 👤 用户系统
+- 📱 **手机号登录**：支持手机号验证码登录/注册
+- ☁️ **多设备同步**：登录后自动同步任务数据到云端
+- 👤 **个人中心**：修改昵称、头像、生日等个人信息
+- 🔗 **账号绑定**：支持绑定微信、QQ、支付宝
+- 🔒 **账号安全**：支持修改密码、账号注销
+
 ### 📋 任务管理
 - ✅ **基础操作**：支持任务的增删改查
 - 🏷️ **任务属性**：标题、描述、截止时间、优先级（高/中/低）
@@ -17,11 +24,6 @@
 - ⚠️ **逾期提醒**：逾期任务高亮显示，支持二次提醒
 - 📱 **浏览器通知**：使用Web Notification API推送提醒
 
-### 🏷️ 任务分类
-- 🤖 **自动分类**：基于关键词自动归入预设分类（工作/学习/生活等）
-- ⚙️ **自定义规则**：支持自定义分类关键词规则
-- 🎨 **分类标签**：可视化分类标签，不同分类不同颜色
-
 ### 📱 多端适配
 - 💻 **响应式布局**：完美适配PC端、平板、手机
 - 👆 **手势操作**：移动端支持左滑删除、右滑标记完成
@@ -30,6 +32,7 @@
 
 ### 💾 数据管理
 - 💿 **本地存储**：基于localStorage实现数据持久化
+- ☁️ **自动云同步**：任务变更自动同步到云端（需登录）
 - 📤 **数据导出**：支持JSON格式导出备份
 - 📥 **数据导入**：支持从JSON文件导入数据
 - 🔒 **数据安全**：版本化管理，防止数据丢失
@@ -72,34 +75,42 @@ todo/
 │   │   ├── TaskForm.vue   # 任务表单组件
 │   │   └── CategoryTag.vue # 分类标签组件
 │   ├── composables/       # 组合式函数
-│   │   ├── useTasks.ts    # 任务管理逻辑
 │   │   ├── useReminder.ts # 提醒逻辑
-│   │   ├── useCategory.ts # 分类逻辑
-│   │   ├── useStorage.ts  # 存储逻辑
 │   │   ├── useTheme.ts    # 主题逻辑
-│   │   └── useGesture.ts  # 手势操作
+│   │   ├── useGesture.ts  # 手势操作
+│   │   └── useKeyboardShortcut.ts # 快捷键
 │   ├── stores/            # 状态管理
 │   │   └── taskStore.ts   # 任务状态
 │   ├── utils/             # 工具函数
 │   │   ├── date.ts        # 日期处理
 │   │   ├── storage.ts     # 存储工具
+│   │   ├── cloudSync.ts   # 云同步
+│   │   ├── category.ts    # 分类算法
 │   │   ├── reminder.ts    # 提醒算法
-│   │   └── category.ts    # 分类算法
+│   │   └── llm.ts         # AI 分类
 │   ├── types/             # TypeScript类型定义
 │   │   └── task.ts        # 任务类型
 │   ├── views/             # 页面组件
 │   │   ├── Home.vue       # 首页
-│   │   └── Settings.vue    # 设置页
+│   │   ├── Login.vue      # 登录页
+│   │   ├── Profile.vue    # 个人中心
+│   │   ├── Calendar.vue   # 日历视图
+│   │   ├── Settings.vue   # 设置页
+│   │   └── Demo.vue       # 演示页
 │   ├── router/            # 路由配置
 │   │   └── index.ts
 │   ├── App.vue            # 根组件
 │   ├── main.ts            # 入口文件
 │   └── style.css          # 全局样式
+├── cloudfunctions/        # 云函数
+│   ├── tasks/             # 任务云函数
+│   └── user/              # 用户云函数
 ├── index.html
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
 ├── tailwind.config.js
+├── cloudbaserc.json
 └── README.md
 ```
 

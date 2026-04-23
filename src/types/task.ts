@@ -43,7 +43,7 @@ export interface CloudSyncSettings {
   envId: string
   lastSyncAt?: string
   userId?: string
-  authType: 'anonymous' | 'email'
+  authType: 'anonymous' | 'email' | 'phone'
 }
 
 export interface AppSettings {

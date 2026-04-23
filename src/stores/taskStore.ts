@@ -1,14 +1,17 @@
 import { reactive, computed, ref } from 'vue'
 import type { Task, TaskFilter, TaskSort, AppSettings, AppData } from '@/types/task'
+import type { UserInfo } from '@/utils/cloudSync'
 import { loadAppData, saveAppData } from '@/utils/storage'
 import { autoCategorize } from '@/utils/category'
 import { dayjs } from '@/utils/date'
+import { markForSync, startAutoSync } from '@/utils/cloudSync'
 
 interface TaskStore {
   tasks: Task[]
   settings: AppSettings
   filter: TaskFilter
   sort: TaskSort
+  user: UserInfo | null
 }
 
 /**
@@ -53,6 +56,7 @@ export const taskStore = reactive<TaskStore>({
   settings: appData.settings,
   filter: {},
   sort: appData.settings.sortBy,
+  user: null,
 })
 
 /**
@@ -130,6 +134,9 @@ export async function createTask(task: Partial<Task>): Promise<Task> {
     taskStore.tasks.push(newTask)
   }
 
+  // 触发云端同步
+  markForSync()
+
   persistData()
   return newTask
 }
@@ -141,6 +148,8 @@ export function updateTask(id: string, updates: Partial<Task>): void {
   const task = findTaskById(id)
   if (task) {
     Object.assign(task, updates, { updatedAt: new Date().toISOString() })
+    // 触发云端同步
+    markForSync()
     persistData()
   }
 }
@@ -152,6 +161,7 @@ export function deleteTask(id: string): void {
   const index = taskStore.tasks.findIndex(t => t.id === id)
   if (index !== -1) {
     taskStore.tasks.splice(index, 1)
+    markForSync()
     persistData()
   } else {
     for (const task of taskStore.tasks) {
@@ -160,6 +170,7 @@ export function deleteTask(id: string): void {
         if (subtaskIndex !== -1) {
           task.subtasks.splice(subtaskIndex, 1)
           task.updatedAt = new Date().toISOString()
+          markForSync()
           persistData()
           return
         }
@@ -173,6 +184,7 @@ export function deleteTask(id: string): void {
  */
 export function deleteTasks(ids: string[]): void {
   taskStore.tasks = taskStore.tasks.filter(t => !ids.includes(t.id))
+  markForSync()
   persistData()
 }
 
@@ -184,6 +196,7 @@ export function toggleTaskStatus(id: string): void {
   if (task) {
     task.status = task.status === 'pending' ? 'completed' : 'pending'
     task.updatedAt = new Date().toISOString()
+    markForSync()
     persistData()
   }
 }
@@ -422,4 +435,21 @@ export function updateSort(sort: TaskSort): void {
  */
 export function refreshTodayTimestamp(): void {
   todayTimestamp.value = getTodayStart()
+}
+
+/**
+ * 设置用户信息
+ */
+export function setUser(user: UserInfo | null): void {
+  taskStore.user = user
+  if (user) {
+    taskStore.settings.cloudSync = {
+      ...taskStore.settings.cloudSync,
+      userId: user.userId,
+      authType: 'phone',
+    }
+    // 登录成功后启动自动同步
+    startAutoSync()
+    persistData()
+  }
 }

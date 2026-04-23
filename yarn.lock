@@ -164,11 +164,11 @@
     "@cloudbase/utilities" "2.27.2"
 
 "@cloudbase/realtime@2.27.2":
-  version "4.0.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/realtime/-/realtime-4.0.0.tgz#2f6314c0059ff8a33e6d462113c9b4391fbe3877"
-  integrity sha512-bVOF3CLHGavuDhdle644sOTtn77yKpPJss+25UXifNk6ZW2wTtCEXuogYdcg9Vy0TxSsfXYwNIGwbQBtBsVV2g==
+  version "2.27.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/realtime/-/realtime-2.27.2.tgz#37162d9763d510edc0e877d98b64134cefc4b35a"
+  integrity sha512-qRWyE3Yh+R4c0tLJKHoRJ+9qN7ldHiZK62jDMfCF5O1HLOUfT7ypPClQUf+l73UutW7q9xZe+1D2g1FoRtG+cQ==
   dependencies:
-    "@cloudbase/types" "4.0.0"
+    "@cloudbase/types" "2.27.2"
     lodash "^4.17.21"
 
 "@cloudbase/storage@2.27.2":
@@ -186,10 +186,10 @@
   dependencies:
     "@cloudbase/adapter-interface" "^0.7.1"
 
-"@cloudbase/types@2.27.2", "@cloudbase/types@4.0.0":
-  version "4.0.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/types/-/types-4.0.0.tgz#af46e7b02229153f8c3d28ef575c4d36ccb72f18"
-  integrity sha512-tfzDDPA+whKSIfuawLJIw9O5gup7Oo17eJaJPIPuhLgHHMg+aUCsIvKsXUesFPzJHcfBYs4EuY2ryQscHQPn7A==
+"@cloudbase/types@2.27.2":
+  version "2.27.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/types/-/types-2.27.2.tgz#d580b0711c574dd8e3ef301c46252de05eb05ba3"
+  integrity sha512-jfRy7PAXjC8YjB6kObRHhe/W9yReXxc43aqgB4ahei2Z6L7k8/Vn5ufEfnQ/C4v0ohc502p002Gga1N9hBNTRA==
   dependencies:
     "@cloudbase/adapter-interface" "^0.7.1"
 

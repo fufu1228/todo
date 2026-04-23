@@ -14,7 +14,9 @@
 ### 2. 创建数据库集合
 
 1. 在 CloudBase 控制台左侧菜单点击「数据库」
-2. 点击「添加集合」，集合名称填 `tasks`
+2. 点击「添加集合」，创建以下集合：
+   - `tasks` - 任务数据集合
+   - `users` - 用户数据集合
 3. 权限设置选择「仅创建者可读写」（确保用户只能操作自己的数据）
 
 ### 3. 开启匿名登录
@@ -22,6 +24,15 @@
 1. 在 CloudBase 控制台左侧菜单点击「登录授权」
 2. 找到「匿名登录」，点击「启用」
 3. 这样用户无需注册即可使用同步功能
+
+### 4. 开启手机号登录（可选，用于用户注册登录）
+
+1. 在 CloudBase 控制台左侧菜单点击「登录授权」
+2. 找到「手机号登录」，点击「启用」
+3. 需要配置短信服务：
+   - 在「短信服务」中创建签名和模板
+   - 在 CloudBase「短信配置」中关联模板
+4. 或者在开发测试阶段，使用开发模式（验证码直接返回）
 
 ---
 
@@ -57,6 +68,8 @@ cloudbase functions:deploy tasks
 
 ### 云函数代码说明
 
+#### tasks 云函数
+
 云函数位于 `cloudfunctions/tasks/index.js`，支持以下操作：
 
 | action        | 说明                 | data 参数          |
@@ -68,7 +81,31 @@ cloudbase functions:deploy tasks
 | `batchDelete` | 批量删除             | `{ ids }`          |
 | `sync`        | 全量同步（覆盖云端） | `{ tasks: [...] }` |
 
-每个操作都会自动关联当前用户的 `userId`（来自匿名登录的 openId），确保数据隔离。
+每个操作都会自动关联当前用户的 `userId`（来自匿名登录的 openId 或自定义登录的 customUserId），确保数据隔离。
+
+#### user 云函数
+
+云函数位于 `cloudfunctions/user/index.js`，支持以下操作：
+
+| action       | 说明           | data 参数                    |
+| ------------ | -------------- | ---------------------------- |
+| `sendCode`   | 发送手机验证码 | `{ phone }`                 |
+| `login`      | 手机号登录     | `{ phone, code }`           |
+| `register`   | 手机号注册     | `{ phone, code }`           |
+| `getUser`    | 获取当前用户   | 无                           |
+
+### 部署云函数
+
+```bash
+# 部署 tasks 云函数
+cloudbase functions:deploy tasks
+
+# 部署 user 云函数
+cloudbase functions:deploy user
+
+# 或者一次性部署所有云函数
+cloudbase functions:deploy
+```
 
 ---
 
