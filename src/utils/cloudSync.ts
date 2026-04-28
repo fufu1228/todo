@@ -1,6 +1,6 @@
 import type { Task } from '@/types/task'
-import { loadAppData, saveAppData } from '@/utils/storage'
 import { taskStore } from '@/stores/taskStore'
+import { saveAppData } from '@/utils/storage'
 import cloudbase from '@cloudbase/js-sdk'
 
 /**
@@ -121,6 +121,19 @@ export async function callFunction(name: string, data: Record<string, any>): Pro
 }
 
 /**
+ * 迁移旧的 anonymous 数据到当前用户
+ */
+export async function migrateAnonymousTasks(): Promise<{ success: boolean; migrated: number }> {
+  try {
+    const res = await callFunction('tasks', { action: 'migrateAnonymous' })
+    return { success: res.success, migrated: res.migrated || 0 }
+  } catch (error) {
+    console.error('迁移匿名数据失败:', error)
+    return { success: false, migrated: 0 }
+  }
+}
+
+/**
  * 匿名登录
  */
 export async function anonymousLogin(): Promise<boolean> {
@@ -140,10 +153,14 @@ async function ensureLogin(): Promise<boolean> {
 export async function fetchCloudTasks(): Promise<Task[]> {
   const res = await callFunction('tasks', { action: 'list' })
   if (res.success && res.data) {
-    return res.data.map((t: any) => ({
-      ...t,
-      id: t._id || t.id,
-    }))
+    return res.data.map((t: any) => {
+      // 剥离云数据库自带的 _id，用 id 字段作为前端任务标识
+      const { _id, ...rest } = t
+      return {
+        ...rest,
+        id: rest.id || _id,
+      }
+    })
   }
   return []
 }
@@ -154,9 +171,14 @@ export async function fetchCloudTasks(): Promise<Task[]> {
 export async function syncTasksToCloud(
   tasks: Task[]
 ): Promise<{ success: boolean; message: string }> {
+  // 剥离 _id 字段，避免插入时与云数据库已有 _id 冲突
+  const cleanTasks = tasks.map(t => {
+    const { _id, ...rest } = t as any
+    return rest
+  })
   const res = await callFunction('tasks', {
     action: 'sync',
-    data: { tasks },
+    data: { tasks: cleanTasks },
   })
   if (res.success) {
     return { success: true, message: `同步成功，共 ${res.synced} 条任务` }
@@ -228,28 +250,37 @@ export async function batchDeleteCloudTasks(
 }
 
 /**
- * 完整同步流程
+ * 完整同步流程：以 taskStore 为数据源同步到云端
  */
 export async function syncWithCloud(): Promise<{ success: boolean; message: string }> {
-  const logged = await ensureLogin()
-  if (!logged) return { success: false, message: '登录失败' }
+  if (!taskStore.user?.isLoggedIn) {
+    return { success: false, message: '未登录' }
+  }
 
   try {
-    const localData = loadAppData()
     const cloudTasks = await fetchCloudTasks()
+    const localTasks = taskStore.tasks
 
-    if (cloudTasks.length === 0) {
-      return await syncTasksToCloud(localData.tasks)
+    if (cloudTasks.length === 0 && localTasks.length === 0) {
+      return { success: true, message: '无需同步' }
     }
 
-    const localIds = new Set(localData.tasks.map(t => t.id))
-    const cloudOnlyTasks = cloudTasks.filter((t: Task) => !localIds.has(t.id))
-    const mergedTasks = [...localData.tasks, ...cloudOnlyTasks]
+    // 如果云端无数据，直接上传本地数据
+    if (cloudTasks.length === 0) {
+      return await syncTasksToCloud(localTasks)
+    }
 
+    // 合并：本地任务为基础 + 云端独有的任务
+    const localIds = new Set(localTasks.map(t => t.id))
+    const cloudOnlyTasks = cloudTasks.filter((t: Task) => !localIds.has(t.id))
+    const mergedTasks = [...localTasks, ...cloudOnlyTasks]
+
+    // 更新本地 store
+    taskStore.tasks = mergedTasks
     saveAppData({
       version: '1.0.0',
       tasks: mergedTasks,
-      settings: localData.settings,
+      settings: taskStore.settings,
     })
 
     return await syncTasksToCloud(mergedTasks)

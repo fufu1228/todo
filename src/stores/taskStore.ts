@@ -1,10 +1,11 @@
 import { reactive, computed, ref } from 'vue'
 import type { Task, TaskFilter, TaskSort, AppSettings, AppData } from '@/types/task'
 import type { UserInfo } from '@/utils/cloudSync'
-import { loadAppData, saveAppData } from '@/utils/storage'
+import { loadAppData, saveAppData, setStorageUser, clearUserData } from '@/utils/storage'
+import { defaultSettings } from '@/utils/storage'
 import { autoCategorize } from '@/utils/category'
 import { dayjs } from '@/utils/date'
-import { markForSync, startAutoSync } from '@/utils/cloudSync'
+import { markForSync, startAutoSync, stopAutoSync } from '@/utils/cloudSync'
 
 interface TaskStore {
   tasks: Task[]
@@ -441,15 +442,26 @@ export function refreshTodayTimestamp(): void {
  * 设置用户信息
  */
 export function setUser(user: UserInfo | null): void {
-  taskStore.user = user
   if (user) {
+    // 登录：设置存储用户，加载该用户的数据
+    setStorageUser(user.userId)
+    const userData = migrateTasks(loadAppData())
+    taskStore.tasks = userData.tasks
+    taskStore.settings = { ...defaultSettings, ...userData.settings }
+    taskStore.user = user
     taskStore.settings.cloudSync = {
       ...taskStore.settings.cloudSync,
       userId: user.userId,
       authType: 'phone',
     }
-    // 登录成功后启动自动同步
-    startAutoSync()
     persistData()
+    // 登录成功后启动自动同步（由 Login.vue 在云端数据加载完后调用 startAutoSync）
+  } else {
+    // 退出：清理所有数据
+    stopAutoSync()
+    taskStore.tasks = []
+    taskStore.user = null
+    clearUserData()
+    setStorageUser(null)
   }
 }

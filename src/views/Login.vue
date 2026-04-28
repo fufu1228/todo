@@ -98,9 +98,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { phoneLogin, phoneRegister, anonymousLogin, fetchCloudTasks } from '@/utils/cloudSync'
+import { phoneLogin, phoneRegister, anonymousLogin, fetchCloudTasks, migrateAnonymousTasks, startAutoSync } from '@/utils/cloudSync'
 import { taskStore, setUser } from '@/stores/taskStore'
-import { saveAppData, loadAppData } from '@/utils/storage'
+import { saveAppData } from '@/utils/storage'
 
 const router = useRouter()
 
@@ -144,30 +144,37 @@ async function handleSubmit() {
       : await phoneLogin(phone.value, password.value)
 
     if (result.success && result.user) {
-      // 设置用户信息
-      console.log('登录成功，准备设置用户:', result.user)
+      // 设置用户信息（内部会切换到该用户的 localStorage，清空旧用户数据）
       setUser(result.user)
-      console.log('用户设置完成，当前 taskStore.user:', taskStore.user)
 
-      // 登录成功后，获取云端任务数据
+      // 登录成功后，先迁移旧的 anonymous 数据，再获取云端任务数据
       try {
-        const cloudTasks = await fetchCloudTasks()
-        const localData = loadAppData()
-        
-        // 只有云端有数据时才用云端数据覆盖本地
-        if (cloudTasks.length > 0) {
-          saveAppData({
-            version: '1.0.0',
-            tasks: cloudTasks,
-            settings: localData.settings,
-          })
-          console.log('已从云端同步数据:', cloudTasks.length, '条')
-        } else {
-          console.log('云端暂无数据，保留本地数据')
+        // 迁移 anonymous 数据到当前用户
+        const migrateRes = await migrateAnonymousTasks()
+        if (migrateRes.migrated > 0) {
+          console.log('已迁移匿名数据:', migrateRes.migrated, '条')
         }
+
+        const cloudTasks = await fetchCloudTasks()
+
+        // 云端有数据则用云端数据覆盖，否则保留本地数据
+        if (cloudTasks.length > 0) {
+          taskStore.tasks = cloudTasks
+          console.log('已从云端同步数据:', cloudTasks.length, '条')
+        }
+
+        // 持久化到当前用户的 localStorage
+        saveAppData({
+          version: '1.0.0',
+          tasks: taskStore.tasks,
+          settings: taskStore.settings,
+        })
       } catch (e) {
         console.error('获取云端数据失败:', e)
       }
+
+      // 云端数据加载完毕后再启动自动同步
+      startAutoSync()
 
       router.replace('/')
     } else {
@@ -185,6 +192,8 @@ async function handleGuest() {
   loading.value = true
   try {
     await anonymousLogin()
+    // 游客模式：设置一个匿名用户标记，让路由守卫放行
+    setUser({ userId: 'guest', phone: '', isLoggedIn: true })
     router.replace('/')
   } catch (error) {
     errorMessage.value = (error as Error).message

@@ -709,9 +709,8 @@ async function handleDeleteAccount() {
     const res = await callFunction('user', { action: 'deleteAccount' })
     if (res.success) {
       await logout()
+      // setUser(null) 内部会清除当前用户的 localStorage 数据和 store
       setUser(null)
-      // 清除本地数据
-      localStorage.clear()
       alert('账号已注销')
       router.replace('/login')
     } else {

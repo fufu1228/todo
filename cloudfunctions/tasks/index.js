@@ -54,14 +54,15 @@ exports.main = async function(event, context) {
         }
         
         // 先删除该用户所有任务
-        const delRes = await db.collection('tasks').where({ userId }).remove()
+        await db.collection('tasks').where({ userId }).remove()
         
-        // 逐个添加任务
+        // 逐个添加任务，剥离 _id 避免冲突
         let addedCount = 0
         for (const task of data.tasks) {
           try {
+            const { _id, ...taskData } = task
             await db.collection('tasks').add({
-              ...task,
+              ...taskData,
               userId,
               updatedAt: new Date(),
             })
@@ -72,6 +73,29 @@ exports.main = async function(event, context) {
         }
         
         return { success: true, synced: addedCount }
+
+      case 'migrateAnonymous':
+        // 迁移旧的 anonymous 数据到当前用户
+        const anonRes = await db.collection('tasks').where({ userId: 'anonymous' }).get()
+        let migratedCount = 0
+        for (const task of anonRes.data) {
+          try {
+            const { _id, ...taskData } = task
+            await db.collection('tasks').add({
+              ...taskData,
+              userId,
+              updatedAt: new Date(),
+            })
+            migratedCount++
+          } catch (e) {
+            console.error('迁移任务失败:', e)
+          }
+        }
+        // 迁移完成后删除旧的 anonymous 数据
+        if (migratedCount > 0) {
+          await db.collection('tasks').where({ userId: 'anonymous' }).remove()
+        }
+        return { success: true, migrated: migratedCount }
 
       default:
         return { success: false, message: '未知操作' }

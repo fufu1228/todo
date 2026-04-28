@@ -3,7 +3,8 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import cloudbase from '@cloudbase/js-sdk'
-import { anonymousLogin } from '@/utils/cloudSync'
+import { getStoredUserId, setStorageUser } from '@/utils/storage'
+import { taskStore, setUser } from '@/stores/taskStore'
 
 // 初始化 CloudBase
 const app = cloudbase.init({
@@ -18,6 +19,17 @@ app.auth().anonymousAuthProvider().signIn()
   .catch((e: Error) => {
     console.warn('匿名登录失败（可忽略）:', e.message)
   })
+
+// 恢复登录状态：如果 localStorage 中有已登录的 userId，自动恢复
+const storedUserId = getStoredUserId()
+if (storedUserId && storedUserId !== 'guest') {
+  setStorageUser(storedUserId)
+  setUser({
+    userId: storedUserId,
+    phone: storedUserId,
+    isLoggedIn: true,
+  })
+}
 
 const vueApp = createApp(App)
 

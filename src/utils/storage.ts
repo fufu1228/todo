@@ -1,6 +1,7 @@
 import type { AppData, AppSettings, SmartReminderRule } from '@/types/task'
 
 const STORAGE_KEY = 'todo_app_data'
+const USER_KEY = 'todo_app_user'
 const DATA_VERSION = '1.0.0'
 
 const defaultSmartReminderRules: SmartReminderRule[] = [
@@ -18,7 +19,7 @@ const defaultSmartReminderRules: SmartReminderRule[] = [
   },
 ]
 
-const defaultSettings: AppSettings = {
+export const defaultSettings: AppSettings = {
   theme: 'auto',
   defaultPriority: 'medium',
   defaultReminderMinutes: 30,
@@ -56,12 +57,49 @@ const defaultSettings: AppSettings = {
   },
 }
 
+// 当前存储用户 ID（用于按用户隔离 localStorage）
+let currentUserId: string | null = null
+
+/**
+ * 设置当前存储用户，用于按用户隔离 localStorage
+ */
+export function setStorageUser(userId: string | null): void {
+  currentUserId = userId
+  if (userId) {
+    localStorage.setItem(USER_KEY, userId)
+  } else {
+    localStorage.removeItem(USER_KEY)
+  }
+}
+
+/**
+ * 获取已持久化的登录用户 ID
+ */
+export function getStoredUserId(): string | null {
+  return localStorage.getItem(USER_KEY)
+}
+
+/**
+ * 获取当前用户对应的 localStorage key
+ */
+function getStorageKey(): string {
+  return currentUserId ? `${STORAGE_KEY}_${currentUserId}` : STORAGE_KEY
+}
+
+/**
+ * 清除当前用户的本地数据
+ */
+export function clearUserData(): void {
+  localStorage.removeItem(getStorageKey())
+}
+
 /**
  * 加载应用数据
  */
 export function loadAppData(): AppData {
   try {
-    const dataStr = localStorage.getItem(STORAGE_KEY)
+    const key = getStorageKey()
+    const dataStr = localStorage.getItem(key)
     if (!dataStr) {
       return {
         version: DATA_VERSION,
@@ -95,7 +133,7 @@ export function loadAppData(): AppData {
  */
 export function saveAppData(data: AppData): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    localStorage.setItem(getStorageKey(), JSON.stringify(data))
   } catch (error) {
     console.error('保存数据失败:', error)
     throw new Error('保存数据失败，请检查存储空间')
