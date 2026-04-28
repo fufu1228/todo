@@ -30,7 +30,7 @@
               </span>
             </div>
             <button
-              @click="showAvatarDialog = true"
+              @click="showAvatarDialog = true; selectedAvatar = userInfo.avatar"
               class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center hover:bg-primary-700 transition-colors"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@
                 <p class="text-sm text-gray-500">{{ userInfo.nickname || '未设置' }}</p>
               </div>
               <button
-                @click="showNicknameDialog = true"
+                @click="showNicknameDialog = true; nicknameInput = userInfo.nickname"
                 class="text-primary-600 dark:text-primary-400 hover:underline"
               >
                 修改
@@ -74,7 +74,7 @@
                 <p class="text-sm text-gray-500">{{ userInfo.birthday || '未设置' }}</p>
               </div>
               <button
-                @click="showBirthdayDialog = true"
+                @click="showBirthdayDialog = true; birthdayInput = userInfo.birthday"
                 class="text-primary-600 dark:text-primary-400 hover:underline"
               >
                 {{ userInfo.birthday ? '修改' : '设置' }}
@@ -87,7 +87,7 @@
                 <p class="text-sm text-gray-500">{{ genderText }}</p>
               </div>
               <button
-                @click="showGenderDialog = true"
+                @click="showGenderDialog = true; genderInput = userInfo.gender"
                 class="text-primary-600 dark:text-primary-400 hover:underline"
               >
                 {{ userInfo.gender ? '修改' : '设置' }}
@@ -216,7 +216,7 @@
               <p class="text-sm opacity-90">开通会员享受更多特权</p>
             </div>
             <button
-              @click="showVipDialog = true"
+              @click="alert('VIP会员功能开发中，敬请期待')"
               class="px-4 py-2 bg-white text-orange-500 rounded-lg hover:bg-opacity-90 transition-colors font-medium"
             >
               立即开通
@@ -418,24 +418,13 @@
     <div v-if="showQQDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">绑定QQ</h3>
-        <input
-          v-model="qqInput"
-          type="text"
-          placeholder="请输入QQ号"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-        />
+        <p class="text-gray-500 dark:text-gray-400">QQ绑定功能开发中，敬请期待</p>
         <div class="flex gap-3 mt-4">
           <button
             @click="showQQDialog = false"
-            class="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg"
-          >
-            取消
-          </button>
-          <button
-            @click="saveQQ"
             class="flex-1 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           >
-            绑定
+            确定
           </button>
         </div>
       </div>
@@ -445,24 +434,13 @@
     <div v-if="showAlipayDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">绑定支付宝</h3>
-        <input
-          v-model="alipayInput"
-          type="text"
-          placeholder="请输入支付宝账号"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-        />
+        <p class="text-gray-500 dark:text-gray-400">支付宝绑定功能开发中，敬请期待</p>
         <div class="flex gap-3 mt-4">
           <button
             @click="showAlipayDialog = false"
-            class="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg"
-          >
-            取消
-          </button>
-          <button
-            @click="saveAlipay"
             class="flex-1 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           >
-            绑定
+            确定
           </button>
         </div>
       </div>
@@ -510,7 +488,6 @@ const showPasswordDialog = ref(false)
 const showAvatarDialog = ref(false)
 const showQQDialog = ref(false)
 const showAlipayDialog = ref(false)
-const showVipDialog = ref(false)
 
 // 输入值
 const nicknameInput = ref('')
@@ -521,8 +498,6 @@ const newPassword = ref('')
 const confirmPassword = ref('')
 const passwordError = ref('')
 const selectedAvatar = ref(1)
-const qqInput = ref('')
-const alipayInput = ref('')
 
 // 加载用户信息
 onMounted(async () => {
@@ -548,17 +523,20 @@ async function loadUserInfo() {
 
 // 保存昵称
 async function saveNickname() {
+  if (!nicknameInput.value.trim()) return
   try {
     const res = await callFunction('user', {
       action: 'updateUserInfo',
-      data: { nickname: nicknameInput.value },
+      data: { nickname: nicknameInput.value.trim() },
     })
     if (res.success) {
-      userInfo.nickname = nicknameInput.value
+      userInfo.nickname = nicknameInput.value.trim()
       showNicknameDialog.value = false
+    } else {
+      alert(res.message || '保存失败')
     }
   } catch (error) {
-    console.error('保存昵称失败:', error)
+    alert('保存失败：' + (error as Error).message)
   }
 }
 
@@ -572,9 +550,11 @@ async function saveBirthday() {
     if (res.success) {
       userInfo.birthday = birthdayInput.value
       showBirthdayDialog.value = false
+    } else {
+      alert(res.message || '保存失败')
     }
   } catch (error) {
-    console.error('保存生日失败:', error)
+    alert('保存失败：' + (error as Error).message)
   }
 }
 
@@ -588,9 +568,11 @@ async function saveGender() {
     if (res.success) {
       userInfo.gender = genderInput.value
       showGenderDialog.value = false
+    } else {
+      alert(res.message || '保存失败')
     }
   } catch (error) {
-    console.error('保存性别失败:', error)
+    alert('保存失败：' + (error as Error).message)
   }
 }
 
@@ -622,7 +604,7 @@ async function savePassword() {
       newPassword.value = ''
       confirmPassword.value = ''
     } else {
-      passwordError.value = res.message
+      passwordError.value = res.message || '修改失败'
     }
   } catch (error) {
     passwordError.value = (error as Error).message
@@ -644,51 +626,27 @@ async function saveAvatar() {
     if (res.success) {
       userInfo.avatar = selectedAvatar.value
       showAvatarDialog.value = false
+    } else {
+      alert(res.message || '保存失败')
     }
   } catch (error) {
-    console.error('保存头像失败:', error)
+    alert('保存失败：' + (error as Error).message)
   }
 }
 
-// 保存QQ
-async function saveQQ() {
-  if (!qqInput.value) return
-  try {
-    const res = await callFunction('user', {
-      action: 'updateUserInfo',
-      data: { qq: qqInput.value },
-    })
-    if (res.success) {
-      userInfo.qq = qqInput.value
-      showQQDialog.value = false
-      qqInput.value = ''
-    }
-  } catch (error) {
-    console.error('绑定QQ失败:', error)
-  }
-}
-
-// 保存支付宝
-async function saveAlipay() {
-  if (!alipayInput.value) return
-  try {
-    const res = await callFunction('user', {
-      action: 'updateUserInfo',
-      data: { alipay: alipayInput.value },
-    })
-    if (res.success) {
-      userInfo.alipay = alipayInput.value
-      showAlipayDialog.value = false
-      alipayInput.value = ''
-    }
-  } catch (error) {
-    console.error('绑定支付宝失败:', error)
-  }
-}
-
-// 绑定微信（扫码）
-async function bindWechat() {
+// 绑定微信（开发中）
+function bindWechat() {
   alert('微信绑定功能开发中，敬请期待')
+}
+
+// 绑定QQ（开发中）
+function saveQQ() {
+  alert('QQ绑定功能开发中，敬请期待')
+}
+
+// 绑定支付宝（开发中）
+function saveAlipay() {
+  alert('支付宝绑定功能开发中，敬请期待')
 }
 
 // 退出登录

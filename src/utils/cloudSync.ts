@@ -92,16 +92,13 @@ export async function callFunction(name: string, data: Record<string, any>): Pro
   // 确保有登录状态
   await ensureAuth()
   
-  // 如果是 tasks 云函数，自动添加手机号用于数据隔离
+  // 如果是 tasks 或 user 云函数，自动添加手机号用于数据隔离和身份识别
   let finalData = { ...data }
-  if (name === 'tasks') {
+  if (name === 'tasks' || name === 'user') {
     const phone = taskStore.user?.phone
-    console.log('tasks 调用 - phone:', phone, 'user:', taskStore.user)
-    // 把 phone 放到 data 对象的顶层
     if (phone) {
       finalData.phone = phone
     }
-    console.log('tasks 调用 - finalData:', finalData)
   }
   
   console.log('调用云函数:', name, finalData)

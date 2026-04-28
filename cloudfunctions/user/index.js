@@ -1,24 +1,15 @@
 /**
  * 用户登录云函数
- * 处理用户注册和登录，支持密码和验证码两种方式
+ * 处理用户注册和登录，支持密码认证
  *
  * 调用方式：
- *   action: 'register'      - 密码注册（data: { phone, password }）
- *   action: 'login'         - 密码登录（data: { phone, password }）
- *   action: 'phoneRegister' - 手机验证码注册（data: { phone, code }）
- *   action: 'phoneLogin'    - 手机验证码登录（data: { phone, code }）
- *   action: 'sendCode'     - 发送验证码（data: { phone }）
- *   action: 'getUser'       - 获取当前用户基本信息
- *   action: 'getUserInfo'   - 获取当前用户详细信息
+ *   action: 'register'       - 密码注册（data: { phone, password }）
+ *   action: 'login'          - 密码登录（data: { phone, password }）
+ *   action: 'getUserInfo'    - 获取当前用户详细信息（需要 event.phone）
  *   action: 'updateUserInfo' - 更新用户信息（data: { nickname, birthday, avatar, qq, alipay, wechat, gender }）
  *   action: 'changePassword' - 修改密码（data: { oldPassword, newPassword }）
- *   action: 'deleteAccount' - 注销账号
+ *   action: 'deleteAccount'  - 注销账号
  */
-
-// 验证码缓存（生产环境应使用数据库或Redis）
-const codeCache = new Map()
-const CODE_EXPIRE_TIME = 5 * 60 * 1000 // 5分钟有效
-const CODE_DEBUG = '123456' // 开发环境测试验证码
 
 const cloudbase = require('@cloudbase/node-sdk')
 const crypto = require('crypto')
@@ -28,18 +19,23 @@ const app = cloudbase.init({
 })
 
 const db = app.database()
-const _ = db.command
 
 // 密码加密
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex')
 }
 
-// 生成自定义登录凭证
-function generateTicket(phone) {
-  const random = crypto.randomBytes(16).toString('hex')
-  const timestamp = Date.now()
-  return `${phone}_${timestamp}_${random}`
+// 获取用户ID：优先从 event.phone 获取，其次从 context.userInfo
+function getUserId(event, context) {
+  const phone = event.phone
+  if (phone) return phone
+
+  const userInfo = context.userInfo
+  if (userInfo && userInfo.customUserId) {
+    return userInfo.customUserId
+  }
+
+  return null
 }
 
 exports.main = async (event, context) => {
@@ -53,35 +49,23 @@ exports.main = async (event, context) => {
       case 'login':
         return await handleLogin(data)
 
-      case 'phoneRegister':
-        return await handlePhoneRegister(data)
-
-      case 'phoneLogin':
-        return await handlePhoneLogin(data)
-
-      case 'sendCode':
-        return await handleSendCode(data)
-
-      case 'getUser':
-        return await handleGetUser(context)
-
       case 'getUserInfo':
-        return await handleGetUserInfo(context)
+        return await handleGetUserInfo(event, context)
 
       case 'updateUserInfo':
-        return await handleUpdateUserInfo(context, data)
+        return await handleUpdateUserInfo(event, context, data)
 
       case 'changePassword':
-        return await handleChangePassword(context, data)
+        return await handleChangePassword(event, context, data)
 
       case 'deleteAccount':
-        return await handleDeleteAccount(context)
+        return await handleDeleteAccount(event, context)
 
       default:
-        return { success: false, message: `未知操作: ${action}` }
+        return { success: false, message: '未知操作: ' + action }
     }
   } catch (error) {
-    console.error(`云函数 user 执行失败 [${action}]:`, error)
+    console.error('云函数 user 执行失败 [' + action + ']:', error)
     return { success: false, message: error.message }
   }
 }
@@ -102,15 +86,13 @@ async function handleRegister({ phone, password }) {
     return { success: false, message: '密码至少6位' }
   }
 
-  const userId = phone // 使用手机号作为用户 ID
+  const userId = phone
 
-  // 检查用户是否已存在
   const existing = await db.collection('users').where({ userId }).get()
   if (existing.data.length > 0) {
     return { success: false, message: '该手机号已注册' }
   }
 
-  // 创建新用户
   const user = {
     userId,
     phone,
@@ -128,58 +110,10 @@ async function handleRegister({ phone, password }) {
 
   await db.collection('users').add(user)
 
-  // 生成登录凭证
-  const ticket = generateTicket(phone)
-
   return {
     success: true,
     message: '注册成功',
-    user: {
-      userId,
-      phone,
-    },
-    ticket,
-  }
-}
-
-/**
- * 手机验证码注册（使用密码方式，实际上就是普通注册）
- */
-async function handlePhoneRegister({ phone, password }) {
-  return await handleRegister({ phone, password })
-}
-
-/**
- * 手机验证码登录（使用密码方式，实际上就是普通登录）
- */
-async function handlePhoneLogin({ phone, password }) {
-  return await handleLogin({ phone, password })
-}
-
-/**
- * 发送手机验证码（开发环境返回固定验证码）
- */
-async function handleSendCode({ phone }) {
-  if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
-    return { success: false, message: '手机号格式不正确' }
-  }
-
-  // 生成验证码（开发环境使用固定验证码，生产环境应该调用短信服务）
-  const code = CODE_DEBUG
-
-  // 存储验证码
-  codeCache.set(phone, {
-    code,
-    expires: Date.now() + CODE_EXPIRE_TIME,
-  })
-
-  // 开发环境返回验证码
-  console.log(`验证码: ${code}`)
-
-  return {
-    success: true,
-    message: '验证码已发送',
-    devCode: code, // 开发环境返回验证码
+    user: { userId, phone },
   }
 }
 
@@ -191,9 +125,8 @@ async function handleLogin({ phone, password }) {
     return { success: false, message: '手机号和密码不能为空' }
   }
 
-  const userId = phone // 使用手机号作为用户 ID
+  const userId = phone
 
-  // 查询用户
   const userRes = await db.collection('users').where({ userId }).get()
 
   if (userRes.data.length === 0) {
@@ -202,14 +135,10 @@ async function handleLogin({ phone, password }) {
 
   const user = userRes.data[0]
 
-  // 验证密码
   const hashedPassword = hashPassword(password)
   if (hashedPassword !== user.password) {
     return { success: false, message: '密码错误' }
   }
-
-  // 生成登录凭证
-  const ticket = generateTicket(phone)
 
   return {
     success: true,
@@ -222,72 +151,28 @@ async function handleLogin({ phone, password }) {
       gender: user.gender,
       avatar: user.avatar,
     },
-    ticket,
-  }
-}
-
-/**
- * 获取当前用户基本信息
- */
-async function handleGetUser(context) {
-  const { userInfo } = context
-  const customUserId = userInfo && userInfo.customUserId
-
-  if (!customUserId) {
-    return { success: false, message: '未登录', user: null }
-  }
-
-  // 通过 customUserId 查找用户（兼容旧数据：也尝试用 customUserId 直接查询）
-  let userRes = await db.collection('users').where({ customUserId }).get()
-  
-  // 如果没找到，尝试用 customUserId 作为 userId 查询（旧数据兼容）
-  if (userRes.data.length === 0) {
-    userRes = await db.collection('users').where({ userId: customUserId }).get()
-  }
-
-  if (userRes.data.length === 0) {
-    return { success: false, message: '用户不存在', user: null }
-  }
-
-  const user = userRes.data[0]
-  return {
-    success: true,
-    user: {
-      userId: user.userId || user.phone,
-      phone: user.phone,
-      nickname: user.nickname,
-    },
   }
 }
 
 /**
  * 获取当前用户详细信息
  */
-async function handleGetUserInfo(context) {
-  const { userInfo } = context
-  const customUserId = userInfo && userInfo.customUserId
-
-  if (!customUserId) {
-    return { success: false, message: '未登录', data: null }
+async function handleGetUserInfo(event, context) {
+  const userId = getUserId(event, context)
+  if (!userId) {
+    return { success: false, message: '未登录' }
   }
 
-  // 通过 customUserId 查找用户（兼容旧数据：也尝试用 customUserId 直接查询）
-  let userRes = await db.collection('users').where({ customUserId }).get()
-  
-  // 如果没找到，尝试用 customUserId 作为 userId 查询（旧数据兼容）
+  const userRes = await db.collection('users').where({ userId }).get()
   if (userRes.data.length === 0) {
-    userRes = await db.collection('users').where({ userId: customUserId }).get()
-  }
-
-  if (userRes.data.length === 0) {
-    return { success: false, message: '用户不存在', data: null }
+    return { success: false, message: '用户不存在' }
   }
 
   const user = userRes.data[0]
   return {
     success: true,
     data: {
-      userId: user.userId || user.phone,
+      userId: user.userId,
       phone: user.phone,
       nickname: user.nickname || '',
       birthday: user.birthday || '',
@@ -303,11 +188,9 @@ async function handleGetUserInfo(context) {
 /**
  * 更新用户信息
  */
-async function handleUpdateUserInfo(context, data) {
-  const { userInfo } = context
-  const customUserId = userInfo && userInfo.customUserId
-
-  if (!customUserId) {
+async function handleUpdateUserInfo(event, context, data) {
+  const userId = getUserId(event, context)
+  if (!userId) {
     return { success: false, message: '未登录' }
   }
 
@@ -322,7 +205,7 @@ async function handleUpdateUserInfo(context, data) {
   if (alipay !== undefined) updateData.alipay = alipay
   if (wechat !== undefined) updateData.wechat = wechat
 
-  await db.collection('users').where({ userId: customUserId }).update(updateData)
+  await db.collection('users').where({ userId }).update(updateData)
 
   return { success: true, message: '更新成功' }
 }
@@ -330,11 +213,9 @@ async function handleUpdateUserInfo(context, data) {
 /**
  * 修改密码
  */
-async function handleChangePassword(context, data) {
-  const { userInfo } = context
-  const customUserId = userInfo && userInfo.customUserId
-
-  if (!customUserId) {
+async function handleChangePassword(event, context, data) {
+  const userId = getUserId(event, context)
+  if (!userId) {
     return { success: false, message: '未登录' }
   }
 
@@ -348,22 +229,19 @@ async function handleChangePassword(context, data) {
     return { success: false, message: '新密码至少6位' }
   }
 
-  // 获取用户
-  const userRes = await db.collection('users').where({ userId: customUserId }).get()
+  const userRes = await db.collection('users').where({ userId }).get()
   if (userRes.data.length === 0) {
     return { success: false, message: '用户不存在' }
   }
 
   const user = userRes.data[0]
 
-  // 验证旧密码
   const hashedOldPassword = hashPassword(oldPassword)
   if (hashedOldPassword !== user.password) {
     return { success: false, message: '当前密码错误' }
   }
 
-  // 更新密码
-  await db.collection('users').where({ userId: customUserId }).update({
+  await db.collection('users').where({ userId }).update({
     password: hashPassword(newPassword),
     updatedAt: new Date(),
   })
@@ -374,19 +252,17 @@ async function handleChangePassword(context, data) {
 /**
  * 注销账号
  */
-async function handleDeleteAccount(context) {
-  const { userInfo } = context
-  const customUserId = userInfo && userInfo.customUserId
-
-  if (!customUserId) {
+async function handleDeleteAccount(event, context) {
+  const userId = getUserId(event, context)
+  if (!userId) {
     return { success: false, message: '未登录' }
   }
 
-  // 删除用户数据
-  await db.collection('users').where({ userId: customUserId }).remove()
+  // 删除用户所有任务
+  await db.collection('tasks').where({ userId }).remove()
 
-  // 删除该用户的所有任务
-  await db.collection('tasks').where({ userId: customUserId }).remove()
+  // 删除用户信息
+  await db.collection('users').where({ userId }).remove()
 
   return { success: true, message: '账号已注销' }
 }
